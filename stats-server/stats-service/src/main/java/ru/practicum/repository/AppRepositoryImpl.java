@@ -12,7 +12,6 @@ import ru.practicum.model.App;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -21,28 +20,33 @@ public class AppRepositoryImpl implements AppRepository {
     private final NamedParameterJdbcTemplate namedJdbcTemplate;
 
     @Override
-    public Optional<App> findByAppAndUri(String app, String uri) {
-        return Optional.empty();
+    public List<App> findByAppAndUri(String app, String uri) {
+        String sql = "select id, name, uri from apps where name = :app and uri = :uri";
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("app", app);
+        parameters.addValue("uri", uri);
+        return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToApp(rs));
     }
 
     @Override
     public long add(App app) {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
-                .withTableName("app")
+                .withTableName("apps")
                 .usingGeneratedKeyColumns("id");
         return simpleJdbcInsert.executeAndReturnKey(app.toMap()).longValue();
     }
 
     @Override
-    public List<App> getAppsByUris(String[] uris) {
-        String sql = "select id from apps where uri in :uris";
+    public List<App> getAppsByUris(List<String> uris) {
+        String sql = "select id, name, uri from apps where uri in (:uris)";
         SqlParameterSource parameters = new MapSqlParameterSource("uris", uris);
         return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToApp(rs));
+
     }
 
     @Override
     public List<App> getAppsByIds(List<Long> ids) {
-        String sql = "";
+        String sql = "select id, name, uri from apps a where id in (:ids)";
         SqlParameterSource parameters = new MapSqlParameterSource("ids", ids);
         return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToApp(rs));
     }

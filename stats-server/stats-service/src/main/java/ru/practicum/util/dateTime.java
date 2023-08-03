@@ -1,6 +1,7 @@
 package ru.practicum.util;
 
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -19,5 +20,13 @@ public class dateTime {
 
     public static String decodeDateTime(String dateTime) {
         return URLDecoder.decode(dateTime, StandardCharsets.UTF_8);
+    }
+
+    public static String encodeDate(LocalDateTime dateTime) {
+        return URLEncoder.encode(dateTime.format(formatter), StandardCharsets.UTF_8);
+    }
+
+    public static Instant toInstant(LocalDateTime localDateTime) {
+        return localDateTime.toInstant(ZONE_OFFSET);
     }
 }

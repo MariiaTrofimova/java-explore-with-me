@@ -3,6 +3,7 @@ package ru.practicum.model;
 import lombok.Builder;
 import lombok.Data;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Map;
 
@@ -18,7 +19,7 @@ public class EndpointHit {
         return Map.of(
                 "app_id", appId,
                 "ip", ip,
-                "timestamp", timestamp
+                "timestamp", Timestamp.from(timestamp)
         );
     }
 }

@@ -1,6 +1,5 @@
 package ru.practicum.repository;
 
-import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.model.EndpointHit;
 
 import java.time.Instant;
@@ -8,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface EndPointHitRepository {
-    void addEndpointHit(EndpointHit endpointHit);
+    EndpointHit addEndpointHit(EndpointHit endpointHit);
 
     Map<Long, Long> getViewsByAppId(Instant start, Instant end);
 

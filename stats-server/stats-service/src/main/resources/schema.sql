@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS hits
     app_id    BIGINT       NOT NULL,
     ip        VARCHAR(256) NOT NULL,
     timestamp TIMESTAMP WITHOUT TIME ZONE,
-    CONSTRAINT fk_hits_to_apps FOREIGN KEY (id) REFERENCES apps (id) ON DELETE CASCADE
+    CONSTRAINT fk_hits_to_apps FOREIGN KEY (app_id) REFERENCES apps (id) ON DELETE CASCADE
 )

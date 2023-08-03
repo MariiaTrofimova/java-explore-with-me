@@ -46,6 +46,7 @@ public class StatsClientImpl implements StatsClient {
                 .build();
     }
 
+    @Override
     public void addEndPointHit(@Valid EndpointHitDto endpointHitDto) {
         validateEndPointHitDto(endpointHitDto);
         HttpEntity<EndpointHitDto> request = new HttpEntity<>(endpointHitDto);
@@ -57,13 +58,14 @@ public class StatsClientImpl implements StatsClient {
         }
     }
 
+    @Override
     public List<ViewStatsDto> getStatistics(@NotNull(message = "Отсутствует дата начала диапазона")
                                             @Past(message = "Дата начала диапазона должна быть в прошлом")
                                             LocalDateTime start,
                                             @NotNull(message = "Дата конца диапазона не может быть пустой")
                                             @PastOrPresent(message = "Дата конца диапазона не может быть в будущем")
                                             LocalDateTime end,
-                                            @NotNull(message = "Отсутствует список uri") String[] uris,
+                                            @NotNull(message = "Отсутствует список uri") List<String> uris,
                                             @NotNull(message = "Отсутствует флаг уникальности ip") Boolean unique) {
 
         Map<String, Object> parameters = addDateParameters(start, end);
@@ -72,6 +74,7 @@ public class StatsClientImpl implements StatsClient {
         return sendGetRequest(parameters);
     }
 
+    @Override
     public List<ViewStatsDto> getStatistics(@NotNull(message = "Отсутствует дата начала диапазона")
                                             @Past(message = "Дата начала диапазона должна быть в прошлом")
                                             LocalDateTime start,
@@ -82,18 +85,20 @@ public class StatsClientImpl implements StatsClient {
         return sendGetRequest(parameters);
     }
 
+    @Override
     public List<ViewStatsDto> getStatistics(@NotNull(message = "Отсутствует дата начала диапазона")
                                             @Past(message = "Дата начала диапазона должна быть в прошлом")
                                             LocalDateTime start,
                                             @NotNull(message = "Дата конца диапазона не может быть пустой")
                                             @PastOrPresent(message = "Дата конца диапазона не может быть в будущем")
                                             LocalDateTime end,
-                                            @NotNull(message = "Список uri не может быть пустым") String[] uris) {
+                                            @NotNull(message = "Список uri не может быть пустым") List<String> uris) {
         Map<String, Object> parameters = addDateParameters(start, end);
         parameters.put("uris", uris);
         return sendGetRequest(parameters);
     }
 
+    @Override
     public List<ViewStatsDto> getStatistics(@NotNull(message = "Отсутствует дата начала диапазона")
                                             @Past(message = "Дата начала диапазона должна быть в прошлом")
                                             LocalDateTime start,
