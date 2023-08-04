@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static ru.practicum.validation.validation.validateDates;
-import static ru.practicum.validation.validation.validateEndPointHitDto;
+import static ru.practicum.validation.Validation.validateDates;
+import static ru.practicum.validation.Validation.validateEndPointHitDto;
 
 @Service
 @Validated
