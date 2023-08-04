@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
-import static ru.practicum.util.dateTime.encodeDate;
-import static ru.practicum.util.dateTime.formatter;
+import static ru.practicum.util.DateTime.encodeDate;
+import static ru.practicum.util.DateTime.formatter;
 
 @ExtendWith(MockitoExtension.class)
 class StatsServiceTest {

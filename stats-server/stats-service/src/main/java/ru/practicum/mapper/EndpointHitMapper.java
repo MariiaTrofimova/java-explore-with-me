@@ -5,7 +5,7 @@ import ru.practicum.model.EndpointHit;
 
 import java.time.Instant;
 
-import static ru.practicum.util.dateTime.parseDateTime;
+import static ru.practicum.util.DateTime.parseDateTime;
 
 public class EndpointHitMapper {
     public static EndpointHit toEndpointHit(EndpointHitDto endpointHitDto, long appId) {

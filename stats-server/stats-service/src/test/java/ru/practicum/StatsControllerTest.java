@@ -26,8 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static ru.practicum.util.dateTime.encodeDate;
-import static ru.practicum.util.dateTime.formatter;
+import static ru.practicum.util.DateTime.encodeDate;
+import static ru.practicum.util.DateTime.formatter;
 
 @WebMvcTest(controllers = StatsController.class)
 class StatsControllerTest {
