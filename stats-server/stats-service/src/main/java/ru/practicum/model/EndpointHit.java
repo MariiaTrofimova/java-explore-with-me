@@ -15,7 +15,7 @@ public class EndpointHit {
     private String ip;
     private Instant timestamp;
 
-    public Map<String,Object> toMap() {
+    public Map<String, Object> toMap() {
         return Map.of(
                 "app_id", appId,
                 "ip", ip,

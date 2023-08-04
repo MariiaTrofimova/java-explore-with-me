@@ -1,9 +1,11 @@
 package ru.practicum.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ViewStatsDto implements Comparable<ViewStatsDto> {
     private String app;

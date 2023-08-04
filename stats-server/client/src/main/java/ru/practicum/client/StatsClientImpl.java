@@ -10,18 +10,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
+import ru.practicum.client.exception.StatsRequestException;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
-import ru.practicum.dto.ViewStatsListDto;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Past;
-import javax.validation.constraints.PastOrPresent;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +30,10 @@ import static ru.practicum.validation.validation.validateEndPointHitDto;
 @Validated
 public class StatsClientImpl implements StatsClient {
     private static final String PATH_HIT = "/hit";
-    private static final String PATH_STATS = "/stats";
-    private static final String SERVER_URL = "${STATS_SERVER_URL}";
+    private static final String PATH_STATS_WITH_DATE_PARAMS = "/stats?start={start}&end={end}";
+    private static final String PARAM_UNIQUE = "&unique={unique}";
+    private static final String PARAM_URIS = "&uris={uris}";
+    private static final String SERVER_URL = "http://stats-server:9090";
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final RestTemplate rest;
@@ -47,68 +46,55 @@ public class StatsClientImpl implements StatsClient {
     }
 
     @Override
-    public void addEndPointHit(@Valid EndpointHitDto endpointHitDto) {
+    public void addEndPointHit(EndpointHitDto endpointHitDto) {
         validateEndPointHitDto(endpointHitDto);
         HttpEntity<EndpointHitDto> request = new HttpEntity<>(endpointHitDto);
         ResponseEntity<Void> response = rest.exchange(PATH_HIT, HttpMethod.POST,
                 request, Void.class);
         HttpStatus code = response.getStatusCode();
         if (code != HttpStatus.CREATED) {
-            throw new RuntimeException("Ошибка при сохранении данных");
+            throw new StatsRequestException("Ошибка при сохранении данных: " + response.getBody());
         }
     }
 
     @Override
-    public List<ViewStatsDto> getStatistics(@NotNull(message = "Отсутствует дата начала диапазона")
-                                            @Past(message = "Дата начала диапазона должна быть в прошлом")
-                                            LocalDateTime start,
-                                            @NotNull(message = "Дата конца диапазона не может быть пустой")
-                                            @PastOrPresent(message = "Дата конца диапазона не может быть в будущем")
+    public List<ViewStatsDto> getStatistics(LocalDateTime start,
                                             LocalDateTime end,
-                                            @NotNull(message = "Отсутствует список uri") List<String> uris,
-                                            @NotNull(message = "Отсутствует флаг уникальности ip") Boolean unique) {
+                                            List<String> uris,
+                                            Boolean unique) {
 
         Map<String, Object> parameters = addDateParameters(start, end);
-        parameters.put("uris", uris);
+        parameters.put("uris", String.join(",", uris));
         parameters.put("unique", unique);
-        return sendGetRequest(parameters);
+        String url = PATH_STATS_WITH_DATE_PARAMS + PARAM_URIS + PARAM_UNIQUE;
+        return sendGetRequest(url, parameters);
     }
 
     @Override
-    public List<ViewStatsDto> getStatistics(@NotNull(message = "Отсутствует дата начала диапазона")
-                                            @Past(message = "Дата начала диапазона должна быть в прошлом")
-                                            LocalDateTime start,
-                                            @NotNull(message = "Дата конца диапазона не может быть пустой")
-                                            @PastOrPresent(message = "Дата конца диапазона не может быть в будущем")
+    public List<ViewStatsDto> getStatistics(LocalDateTime start,
                                             LocalDateTime end) {
         Map<String, Object> parameters = addDateParameters(start, end);
-        return sendGetRequest(parameters);
+        return sendGetRequest(PATH_STATS_WITH_DATE_PARAMS, parameters);
     }
 
     @Override
-    public List<ViewStatsDto> getStatistics(@NotNull(message = "Отсутствует дата начала диапазона")
-                                            @Past(message = "Дата начала диапазона должна быть в прошлом")
-                                            LocalDateTime start,
-                                            @NotNull(message = "Дата конца диапазона не может быть пустой")
-                                            @PastOrPresent(message = "Дата конца диапазона не может быть в будущем")
+    public List<ViewStatsDto> getStatistics(LocalDateTime start,
                                             LocalDateTime end,
-                                            @NotNull(message = "Список uri не может быть пустым") List<String> uris) {
+                                            List<String> uris) {
         Map<String, Object> parameters = addDateParameters(start, end);
-        parameters.put("uris", uris);
-        return sendGetRequest(parameters);
+        parameters.put("uris", String.join(",", uris));
+        String url = PATH_STATS_WITH_DATE_PARAMS + PARAM_URIS;
+        return sendGetRequest(url, parameters);
     }
 
     @Override
-    public List<ViewStatsDto> getStatistics(@NotNull(message = "Отсутствует дата начала диапазона")
-                                            @Past(message = "Дата начала диапазона должна быть в прошлом")
-                                            LocalDateTime start,
-                                            @NotNull(message = "Дата конца диапазона не может быть пустой")
-                                            @PastOrPresent(message = "Дата конца диапазона не может быть в будущем")
+    public List<ViewStatsDto> getStatistics(LocalDateTime start,
                                             LocalDateTime end,
-                                            @NotNull(message = "Отсутствует флаг уникальности ip") Boolean unique) {
+                                            Boolean unique) {
         Map<String, Object> parameters = addDateParameters(start, end);
         parameters.put("unique", unique);
-        return sendGetRequest(parameters);
+        String url = PATH_STATS_WITH_DATE_PARAMS + PARAM_UNIQUE;
+        return sendGetRequest(url, parameters);
     }
 
     private Map<String, Object> addDateParameters(LocalDateTime start, LocalDateTime end) {
@@ -122,14 +108,20 @@ public class StatsClientImpl implements StatsClient {
     }
 
     private String encodeDate(LocalDateTime dateTime) {
-        return URLEncoder.encode(dateTime.format(formatter), StandardCharsets.UTF_8);
+        String dateTimeString = dateTime.format(formatter);
+        return URLEncoder.encode(dateTimeString, StandardCharsets.UTF_8);
     }
 
-    private List<ViewStatsDto> sendGetRequest(Map<String, Object> parameters) {
-        ViewStatsListDto response = rest.getForObject(PATH_STATS, ViewStatsListDto.class, parameters);
-        if (response == null) {
-            throw new RuntimeException("Ошибка при запросе данных");
+    private List<ViewStatsDto> sendGetRequest(String url, Map<String, Object> parameters) {
+        ViewStatsDto[] response;
+        try {
+            response = rest.getForObject(url, ViewStatsDto[].class, parameters);
+        } catch (RuntimeException e) {
+            throw new StatsRequestException("Ошибка при запросе данных статистики: " + e.getMessage());
         }
-        return response.getViewStatsDtoList();
+        if (response == null) {
+            throw new StatsRequestException("Ошибка при запросе данных статистики");
+        }
+        return Arrays.asList(response);
     }
 }

@@ -1,6 +1,5 @@
 package ru.practicum.validation;
 
-import org.apache.commons.validator.routines.InetAddressValidator;
 import ru.practicum.dto.EndpointHitDto;
 
 import javax.validation.ValidationException;
@@ -18,10 +17,6 @@ public class validation {
     }
 
     public static void validateEndPointHitDto(EndpointHitDto endpointHitDto) {
-        InetAddressValidator validator = InetAddressValidator.getInstance();
-        if(!validator.isValid(endpointHitDto.getIp())) {
-            throw new ValidationException("Некорректный ip-адрес");
-        }
         if (!isValid(endpointHitDto.getTimestamp())) {
             throw new ValidationException("Некорректный формат даты");
         }

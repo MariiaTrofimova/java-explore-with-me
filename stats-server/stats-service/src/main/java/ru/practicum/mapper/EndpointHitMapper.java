@@ -3,8 +3,7 @@ package ru.practicum.mapper;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.model.EndpointHit;
 
-import java.time.*;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
 
 import static ru.practicum.util.dateTime.parseDateTime;
 

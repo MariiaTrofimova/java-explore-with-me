@@ -12,7 +12,6 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats
       - POSTGRES_USER=mariia
       - POSTGRES_PASSWORD=password
-      - STATS_SERVER_URL=http://server:9090
 
   stats-db:
     image: postgres:14-alpine
