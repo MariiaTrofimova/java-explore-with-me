@@ -86,6 +86,11 @@ public class StatsServiceImpl implements StatsService {
             appIds = apps.stream().map(App::getId).collect(Collectors.toList());
             viewsByAppId = unique ? hitRepo.getUniqueViewsByAppId(start, end, appIds) :
                     hitRepo.getViewsByAppId(start, end, appIds);
+            if (viewsByAppId.isEmpty()) {
+                log.debug("Пустой отчет для периода с {} по {}. Список uri {}. Уникальные просмотры {}",
+                        start, end, uris, unique);
+                return Collections.emptyList();
+            }
         }
         log.debug("Запрос статистики для периода с {} по {}. Список uri {}. Уникальные просмотры {}",
                 start, end, uris, unique);

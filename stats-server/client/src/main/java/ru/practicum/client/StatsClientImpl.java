@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import static ru.practicum.validation.Validation.validateDates;
-import static ru.practicum.validation.Validation.validateEndPointHitDto;
 
 @Service
 @Validated
@@ -47,7 +46,6 @@ public class StatsClientImpl implements StatsClient {
 
     @Override
     public void addEndPointHit(EndpointHitDto endpointHitDto) {
-        validateEndPointHitDto(endpointHitDto);
         HttpEntity<EndpointHitDto> request = new HttpEntity<>(endpointHitDto);
         ResponseEntity<Void> response = rest.exchange(PATH_HIT, HttpMethod.POST,
                 request, Void.class);

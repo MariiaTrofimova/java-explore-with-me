@@ -7,6 +7,5 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class EwmService {
     public static void main(String[] args) {
         SpringApplication.run(EwmService.class, args);
-        //new StatsClient(); //--> тестирование клиента
     }
 }

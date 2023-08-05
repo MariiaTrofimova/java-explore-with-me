@@ -13,7 +13,6 @@ import ru.practicum.dto.ViewStatsDto;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -21,7 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class EventController {
-    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final StatsClient client;
 
@@ -31,7 +29,7 @@ public class EventController {
         String ip = request.getRemoteAddr();
         String uri = request.getRequestURI();
         String app = "ewm-main-service";
-        String timestamp = LocalDateTime.now().format(formatter);
+        LocalDateTime timestamp = LocalDateTime.now();
 
         EndpointHitDto hitDto = EndpointHitDto.builder()
                 .app(app)

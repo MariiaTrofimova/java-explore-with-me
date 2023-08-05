@@ -25,7 +25,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static ru.practicum.util.DateTime.encodeDate;
-import static ru.practicum.util.DateTime.formatter;
 
 @ExtendWith(MockitoExtension.class)
 class StatsServiceTest {
@@ -48,7 +47,6 @@ class StatsServiceTest {
 
     @BeforeEach
     void setup() {
-        String timestamp = NOW.format(formatter);
         String app = "ewm-main-service";
         String uri = "/events/1";
         String ip = "121.0.0.1";
@@ -56,7 +54,7 @@ class StatsServiceTest {
                 .app(app)
                 .uri(uri)
                 .ip(ip)
-                .timestamp(timestamp);
+                .timestamp(NOW);
 
         start = encodeDate(NOW.minusHours(1));
         end = encodeDate(NOW);
@@ -166,6 +164,30 @@ class StatsServiceTest {
         when(appRepo.getAppsByUris(List.of(uri))).thenReturn(List.of(app));
         when(hitRepo.getViewsByAppId(any(), any(), anyList())).thenReturn(hitsQtyByAppId);
         List<ViewStatsDto> viewStatsDTOs = service.getStats(start, end, List.of(uri), false);
+        assertThat(viewStatsDTOs)
+                .isNotNull()
+                .hasSize(1);
+    }
+
+    @Test
+    void shouldGetStatsWithMultipleListOfUrisSingleList() {
+        long appId = 1L;
+        long hitsQty = 1L;
+        Map<Long, Long> hitsQtyByAppId = Map.of(appId, hitsQty);
+        String appName = "ewm-main-service";
+        String uri = "/events/1";
+
+        App app = App.builder()
+                .id(appId)
+                .name(appName)
+                .uri(uri)
+                .build();
+
+        //multiple List Of Uris, Single Result
+        List<String> uris = List.of("/events/1", "/events/2");
+        when(appRepo.getAppsByUris(uris)).thenReturn(List.of(app));
+        when(hitRepo.getViewsByAppId(any(), any(), anyList())).thenReturn(hitsQtyByAppId);
+        List<ViewStatsDto> viewStatsDTOs = service.getStats(start, end, uris, false);
         assertThat(viewStatsDTOs)
                 .isNotNull()
                 .hasSize(1);

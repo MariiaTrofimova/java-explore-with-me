@@ -12,6 +12,7 @@ import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.service.StatsService;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ru.practicum.util.DateTime.encodeDate;
-import static ru.practicum.util.DateTime.formatter;
 
 @WebMvcTest(controllers = StatsController.class)
 class StatsControllerTest {
@@ -37,8 +37,6 @@ class StatsControllerTest {
     private static final List<String> URIS_DEFAULT = Collections.emptyList();
     private static final LocalDateTime NOW = LocalDateTime.now();
 
-    private EndpointHitDto hitDto;
-    private ViewStatsDto viewStatsDto;
     private EndpointHitDto.EndpointHitDtoBuilder hitDtoBuilder;
     private ViewStatsDto.ViewStatsDtoBuilder viewStatsDtoBuilder;
 
@@ -57,7 +55,6 @@ class StatsControllerTest {
 
     @BeforeEach
     void setup() {
-        String timestamp = NOW.format(formatter);
         String app = "ewm-main-service";
         String uri = "/events/1";
         String ip = "121.0.0.1";
@@ -65,7 +62,7 @@ class StatsControllerTest {
                 .app(app)
                 .uri(uri)
                 .ip(ip)
-                .timestamp(timestamp);
+                .timestamp(NOW);
 
         viewStatsDtoBuilder = ViewStatsDto.builder()
                 .app(app)
@@ -83,8 +80,10 @@ class StatsControllerTest {
     @Test
     void shouldAdd() throws Exception {
         //Regular Case
-        hitDto = hitDtoBuilder.build();
-        String json = mapper.writeValueAsString(hitDto);
+        EndpointHitDto hitDto = hitDtoBuilder.build();
+        String json = mapper
+                .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"))
+                .writeValueAsString(hitDto);
         doNothing().when(service).addHit(hitDto);
         mvc.perform(post(PATH_HIT)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +107,7 @@ class StatsControllerTest {
     @Test
     void shouldGetStat() throws Exception {
         //SingleList
-        viewStatsDto = viewStatsDtoBuilder.hits(1).build();
+        ViewStatsDto viewStatsDto = viewStatsDtoBuilder.hits(1).build();
         when(service.getStats(start, end, URIS_DEFAULT, UNIQUE_DEFAULT)).thenReturn(List.of(viewStatsDto));
         mvc.perform(get(PATH_STATS)
                         .param("start", start)

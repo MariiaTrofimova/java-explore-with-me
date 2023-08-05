@@ -5,11 +5,11 @@ import ru.practicum.model.EndpointHit;
 
 import java.time.Instant;
 
-import static ru.practicum.util.DateTime.parseDateTime;
+import static ru.practicum.util.DateTime.toInstant;
 
 public class EndpointHitMapper {
     public static EndpointHit toEndpointHit(EndpointHitDto endpointHitDto, long appId) {
-        Instant timestamp = parseDateTime(endpointHitDto.getTimestamp());
+        Instant timestamp = toInstant(endpointHitDto.getTimestamp());
         return EndpointHit.builder()
                 .appId(appId)
                 .ip(endpointHitDto.getIp())
