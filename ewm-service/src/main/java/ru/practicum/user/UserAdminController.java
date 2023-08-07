@@ -13,14 +13,15 @@ import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
+import static ru.practicum.error.util.ErrorMessages.FROM_ERROR_MESSAGE;
+import static ru.practicum.error.util.ErrorMessages.SIZE_ERROR_MESSAGE;
+
 @RestController
 @RequestMapping("/admin/users")
 @Slf4j
 @Validated
 @RequiredArgsConstructor
 public class UserAdminController {
-    private static final String FROM_ERROR_MESSAGE = "Индекс первого элемента не может быть отрицательным";
-    private static final String SIZE_ERROR_MESSAGE = "Количество элементов для отображения должно быть положительным";
 
     private final UserService service;
 
@@ -31,12 +32,12 @@ public class UserAdminController {
     }
 
     @GetMapping
-    public List<UserDto> getStat(@RequestParam(required = false, defaultValue = "") List<Long> ids,
-                                 @PositiveOrZero(message = FROM_ERROR_MESSAGE)
-                                 @RequestParam(defaultValue = "0") Integer from,
-                                 @Positive(message = SIZE_ERROR_MESSAGE)
-                                 @RequestParam(defaultValue = "10") Integer size) {
-        return service.getAll(ids, from, size);
+    public List<UserDto> getByIds(@RequestParam(required = false, defaultValue = "") List<Long> ids,
+                                  @PositiveOrZero(message = FROM_ERROR_MESSAGE)
+                                  @RequestParam(defaultValue = "0") Integer from,
+                                  @Positive(message = SIZE_ERROR_MESSAGE)
+                                  @RequestParam(defaultValue = "10") Integer size) {
+        return service.getByIds(ids, from, size);
     }
 
     @DeleteMapping("/{userId}")

@@ -16,7 +16,7 @@ public class CompilationDto {
 
     private final List<EventShortDto> events = new ArrayList<>();
 
-    public void addEvent(EventShortDto eventShortDto){
+    public void addEvent(EventShortDto eventShortDto) {
         events.add(eventShortDto);
     }
 }

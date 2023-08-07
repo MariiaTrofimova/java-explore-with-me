@@ -1,19 +1,23 @@
 package ru.practicum.user.service;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.user.dto.NewUserRequest;
 import ru.practicum.user.dto.UserDto;
+import ru.practicum.user.repository.UserRepository;
 
 import java.util.List;
 
 @Service
 @Transactional
 @Slf4j
-@AllArgsConstructor
-public class UserServiceImpl implements UserService{
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository repository;
+
     @Override
     public UserDto add(NewUserRequest newUserRequest) {
         return null;
@@ -21,7 +25,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserDto> getAll(List<Long> ids, Integer from, Integer size) {
+    public List<UserDto> getByIds(List<Long> ids, Integer from, Integer size) {
         return null;
     }
 

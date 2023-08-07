@@ -12,12 +12,3 @@ public class EventRequestStatusUpdateRequest {
     private RequestStatus status;
     private List<Long> requestIds;
 }
-
-//Изменение статуса запроса на участие в событии текущего пользователя
-
-//requestIds
-//Идентификаторы запросов на участие в событии текущего пользователя
-
-//status
-//Новый статус запроса на участие в событии текущего пользователя
-//[ CONFIRMED, REJECTED ]
