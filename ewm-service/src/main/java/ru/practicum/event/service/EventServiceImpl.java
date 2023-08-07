@@ -1,4 +1,4 @@
-package ru.practicum.events.service;
+package ru.practicum.event.service;
 
 import org.springframework.stereotype.Service;
 

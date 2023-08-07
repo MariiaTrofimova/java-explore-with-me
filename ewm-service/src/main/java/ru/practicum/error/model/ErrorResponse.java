@@ -19,8 +19,4 @@ public class ErrorResponse {
     public ErrorResponse(Map<String, String> validationErrors) {
         this.validationErrors = validationErrors;
     }
-
-    public String getError() {
-        return error;
-    }
 }

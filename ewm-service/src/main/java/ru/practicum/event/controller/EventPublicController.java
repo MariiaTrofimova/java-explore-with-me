@@ -1,4 +1,4 @@
-package ru.practicum.events;
+package ru.practicum.event.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import java.util.List;
 @RequestMapping(path = "/events")
 @RequiredArgsConstructor
 @Slf4j
-public class EventController {
+public class EventPublicController {
 
     private final StatsClient client;
 
