@@ -2,9 +2,8 @@ package ru.practicum.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import ru.practicum.event.enums.StateAction;
-import ru.practicum.event.model.Location;
 
+import javax.validation.constraints.FutureOrPresent;
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,11 +16,12 @@ public class UpdateEventDto {
     private Long category;
     private String description;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @FutureOrPresent(message = "Поле должно содержать дату, которая еще не наступила")
     private LocalDateTime eventDate;
-    private Location location;
+    private LocationDto location;
     private Boolean paid;
     private Integer participantLimit;
     private Boolean requestModeration;
-    private StateAction stateAction;
+    private String stateAction;
     private String title;
 }

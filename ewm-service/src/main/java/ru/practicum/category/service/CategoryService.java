@@ -6,7 +6,7 @@ import ru.practicum.category.dto.NewCategoryDto;
 import java.util.List;
 
 public interface CategoryService {
-    List<CategoryDto> getAll(Integer from, Integer size);
+    List<CategoryDto> getAll(int from, int size);
 
     CategoryDto findById(long catId);
 

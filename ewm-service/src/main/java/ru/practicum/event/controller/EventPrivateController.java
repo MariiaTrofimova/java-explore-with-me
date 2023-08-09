@@ -11,6 +11,7 @@ import ru.practicum.event.service.EventService;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
+import ru.practicum.request.service.RequestService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -27,6 +28,7 @@ import static ru.practicum.error.util.ErrorMessages.SIZE_ERROR_MESSAGE;
 @RequiredArgsConstructor
 public class EventPrivateController {
     private final EventService service;
+    private final RequestService requestService;
 
     @GetMapping
     public List<EventFullDto> getByUserId(@PathVariable long userId,
@@ -43,12 +45,6 @@ public class EventPrivateController {
         return service.getUsersEventById(userId, eventId);
     }
 
-    @GetMapping("/{eventId}/requests")
-    public List<ParticipationRequestDto> getRequestsForUsersEvent(@PathVariable long userId,
-                                                                  @PathVariable long eventId) {
-        return service.getRequestsForUsersEvent(userId, eventId);
-    }
-
     @PostMapping
     public EventFullDto add(@PathVariable long userId,
                             @Valid @RequestBody NewEventDto newEventDto) {
@@ -59,14 +55,21 @@ public class EventPrivateController {
     public EventFullDto update(@PathVariable long userId,
                                @PathVariable long eventId,
                                @Valid @RequestBody UpdateEventDto updateEventDto) {
+
         return service.update(userId, eventId, updateEventDto);
     }
 
-    @PatchMapping()
+    @GetMapping("/{eventId}/requests")
+    public List<ParticipationRequestDto> getRequestsForUsersEvent(@PathVariable long userId,
+                                                                  @PathVariable long eventId) {
+        return requestService.getRequestsForUsersEvent(userId, eventId);
+    }
+
+    @PatchMapping("/{eventId}/requests")
     public EventRequestStatusUpdateResult updateRequests(@PathVariable long userId,
                                                          @PathVariable long eventId,
                                                          @Valid @RequestBody EventRequestStatusUpdateRequest
                                                                  eventRequestStatusUpdateRequest) {
-        return service.updateRequests(userId, eventId, eventRequestStatusUpdateRequest);
+        return requestService.updateRequests(userId, eventId, eventRequestStatusUpdateRequest);
     }
 }

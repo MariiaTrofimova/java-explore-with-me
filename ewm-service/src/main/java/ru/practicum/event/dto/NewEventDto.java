@@ -2,8 +2,8 @@ package ru.practicum.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import ru.practicum.event.model.Location;
 
+import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
@@ -21,10 +21,11 @@ public class NewEventDto {
     @Size(min = 20, max = 7000, message = "Размер описания должен быть от 20 до 7000 символов")
     private String description;
     @NotNull
+    @FutureOrPresent(message = "Поле должно содержать дату, которая еще не наступила")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
     @NotNull
-    private Location location;
+    private LocationDto location;
     //default: false
     private boolean paid;
     //default: 0
