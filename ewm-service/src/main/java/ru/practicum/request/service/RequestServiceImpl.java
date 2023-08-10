@@ -18,9 +18,14 @@ import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.repository.RequestRepository;
 
 import javax.validation.ValidationException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static ru.practicum.request.enums.RequestStatus.CONFIRMED;
+import static ru.practicum.request.enums.RequestStatus.REJECTED;
 
 @Service
 @Transactional
@@ -45,14 +50,13 @@ public class RequestServiceImpl implements RequestService {
     public ParticipationRequestDto add(long userId, long eventId) {
         Event event = eventRepo.findById(eventId);
         validateRequest(event, eventId, userId);
-        int requestsQty = 1;
-        validateParticipationLimit(event, eventId, requestsQty);
+
         Request request = Request.builder()
                 .requesterId(userId)
                 .eventId(eventId)
                 .build();
-        if (!event.isRequestModeration()) {
-            request.setStatus(RequestStatus.CONFIRMED);
+        if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
+            request.setStatus(CONFIRMED);
         } else {
             request.setStatus(RequestStatus.PENDING);
         }
@@ -70,6 +74,9 @@ public class RequestServiceImpl implements RequestService {
                             requestId, userId));
         }
         repository.deleteById(requestId);
+        if (request.getStatus() == CONFIRMED) {
+            eventRepo.setAvailable(request.getEventId(), true);
+        }
         return RequestMapper.toParticipationRequestDto(request);
     }
 
@@ -89,47 +96,76 @@ public class RequestServiceImpl implements RequestService {
     public EventRequestStatusUpdateResult updateRequests(long userId,
                                                          long eventId,
                                                          EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
+        String statusParam = eventRequestStatusUpdateRequest.getStatus();
+        RequestStatus newStatus = RequestStatus.from(statusParam)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown status: " + statusParam));
+
         Event event = eventRepo.findById(eventId);
-        List<Request> requests = repository.findByEventId(eventId);
-        if (event.getParticipantLimit() == 0) {
-            return RequestMapper.toEventRequestStatusUpdateResult(requests);
+
+        int participantLimit = event.getParticipantLimit();
+        if (participantLimit == 0 || !event.isRequestModeration()) {
+            log.warn("Событие с id {} не требует одобрения заявок", event.getId());
+            throw new ConflictException(String.format("Событие с id %d не требует одобрения заявок", event.getId()));
         }
 
         List<Long> requestIds = eventRequestStatusUpdateRequest.getRequestIds();
+        List<Request> requestsToUpdate = repository.findByIds(requestIds);
 
-        List<Request> requestsToUpdate = requests.stream()
-                .filter(request -> requestIds.contains(request.getId()))
-                .collect(Collectors.toList());
-        if (requestsToUpdate.stream().anyMatch(request -> request.getStatus() != RequestStatus.PENDING)) {
-            log.warn("Попытка изменить статус у заявок не в состоянии ожидания");
-            throw new ConflictException("Можно изменить статус только у заявок, находящихся в состоянии ожидания");
+        requestsToUpdate.forEach(request -> {
+            if (request.getEventId() != eventId) {
+                log.warn("Заявка с id {} не относится к событию с id {}", request.getId(), eventId);
+                throw new NotFoundException(
+                        String.format("Заявка с id %d не относится к событию с id %d", request.getId(), eventId));
+            }
+            if (request.getStatus() != RequestStatus.PENDING) {
+                log.warn("Попытка изменить статус у заявок не в состоянии ожидания");
+                throw new ConflictException("Можно изменить статус только у заявок, находящихся в состоянии ожидания");
+            }
+        });
+
+        if (newStatus == CONFIRMED) {
+            if (!event.isAvailable()) {
+                reportLimitConflict(eventId, participantLimit);
+            }
+
+            List<Request> confirmedRequests;
+            List<Request> rejectedRequests = new ArrayList<>();
+            int confirmedBeforeRequestsQty = repository.countConfirmedRequestsByEventId(eventId);
+            int requestsQty = requestsToUpdate.size();
+            int freeQtyToConfirm = participantLimit - confirmedBeforeRequestsQty;
+
+            if (freeQtyToConfirm >= requestsQty) {
+                requestsToUpdate.forEach(request -> request.setStatus(CONFIRMED));
+                confirmedRequests = requestsToUpdate;
+                if (freeQtyToConfirm == requestsQty) {
+                    eventRepo.setAvailable(eventId, false);
+                }
+                repository.updateStatuses(requestIds, CONFIRMED);
+            } else {
+                IntStream.range(0, freeQtyToConfirm).forEach(i -> requestsToUpdate.get(i).setStatus(CONFIRMED));
+                IntStream.range(freeQtyToConfirm, requestsQty).forEach(i -> requestsToUpdate.get(i).setStatus(REJECTED));
+                confirmedRequests = requestsToUpdate.stream().limit(freeQtyToConfirm).collect(Collectors.toList());
+                rejectedRequests = requestsToUpdate.stream().skip(freeQtyToConfirm).collect(Collectors.toList());
+                repository.updateStatuses(confirmedRequests.stream()
+                        .map(Request::getId).collect(Collectors.toList()), CONFIRMED);
+                repository.updateStatuses(rejectedRequests.stream()
+                        .map(Request::getId).collect(Collectors.toList()), REJECTED);
+            }
+
+            return RequestMapper.toEventRequestStatusUpdateResult(confirmedRequests, rejectedRequests);
+
+        } else if (newStatus == REJECTED) {
+            requestsToUpdate.forEach(request -> request.setStatus(REJECTED));
+            repository.updateStatuses(requestIds, REJECTED);
+            return RequestMapper.toEventRequestStatusUpdateResult(Collections.emptyList(), requestsToUpdate);
+        } else {
+            log.warn("Нельзя изменить статус на PENDING");
+            throw new ValidationException("Нельзя изменить статус на PENDING");
         }
-
-        RequestStatus newStatus = eventRequestStatusUpdateRequest.getStatus();
-        int requestsConfirmedQty = 0;
-        if (newStatus == RequestStatus.CONFIRMED) {
-            int requestsQty = requestIds.size();
-            requestsConfirmedQty = validateParticipationLimit(event, eventId, requestsQty);
-        }
-        requestsToUpdate.forEach(request -> request.setStatus(newStatus));
-
-        //если при подтверждении заявки, лимит заявок для события исчерпан,
-        //все неподтверждённые заявки необходимо отклонить
-        if (requestsConfirmedQty == event.getParticipantLimit()) {
-            List<Request> requestsToReject = requests.stream()
-                    .filter(request -> request.getStatus() == RequestStatus.PENDING
-                            && !requestIds.contains(request.getId()))
-                    .peek(request -> request.setStatus(RequestStatus.REJECTED))
-                    .collect(Collectors.toList());
-            requestsToUpdate.addAll(requestsToReject);
-        }
-        repository.update(requestsToUpdate);
-
-        return RequestMapper.toEventRequestStatusUpdateResult(requests);
     }
 
     private void validateRequest(Event event, long eventId, long userId) {
-        List<Long> userRequestIds = repository.findByRequestorId(userId);
+        List<Long> userRequestIds = repository.findIdsByRequestorId(userId);
         if (userRequestIds.contains(eventId)) {
             log.warn("Попытка повторного запроса на участие в событии с id {} от пользователя с id {}",
                     eventId, userId);
@@ -149,18 +185,16 @@ public class RequestServiceImpl implements RequestService {
             throw new ValidationException(
                     String.format("Нельзя участвовать в неопубликованном событии с id %d", eventId));
         }
+        if (!event.isAvailable()) {
+            reportLimitConflict(eventId, event.getParticipantLimit());
+        }
     }
 
-    private int validateParticipationLimit(Event event, long eventId, int requestsQty) {
-        int confirmedRequests = repository.countConfirmedRequestsByEventId(eventId);
-        int participantLimit = event.getParticipantLimit();
-        if (participantLimit != 0 && confirmedRequests + requestsQty > participantLimit) {
-            log.warn("У события с id {} достигнут лимит запросов на участие {}",
-                    eventId, participantLimit);
-            throw new ConflictException(
-                    String.format("У события с id  %d достигнут лимит запросов на участие %d",
-                            eventId, participantLimit));
-        }
-        return confirmedRequests + requestsQty;
+    private void reportLimitConflict(long eventId, int participantLimit) {
+        log.warn("У события с id {} достигнут лимит запросов на участие {}",
+                eventId, participantLimit);
+        throw new ConflictException(
+                String.format("У события с id  %d достигнут лимит запросов на участие %d",
+                        eventId, participantLimit));
     }
 }

@@ -22,6 +22,7 @@ import static ru.practicum.util.DateTime.toInstant;
 import static ru.practicum.util.DateTime.toLocalDateTime;
 
 public class EventMapper {
+    private static final boolean DEFAULT_AVAILABLE = true;
 
     public static Event toEvent(NewEventDto newEventDto, long locationId, long userId) {
         return Event.builder()
@@ -36,6 +37,7 @@ public class EventMapper {
                 .title(newEventDto.getTitle())
                 .initiator(userId)
                 .eventState(EventState.PENDING)
+                .available(DEFAULT_AVAILABLE)
                 .build();
     }
 
@@ -44,8 +46,8 @@ public class EventMapper {
                                               User user,
                                               Location location,
                                               int confirmedRequests,
-                                              ViewStatsDto viewStatsDto) {
-        return EventFullDto.builder()
+                                              int views) {
+        EventFullDto eventFullDto =  EventFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toCategoryDto(category))
@@ -57,11 +59,14 @@ public class EventMapper {
                 .location(LocationMapper.locationDto(location))
                 .paid(event.isPaid())
                 .participantLimit(event.getParticipantLimit())
-                .publishedOn(toLocalDateTime(event.getPublishedOn()))
                 .requestModeration(event.isRequestModeration())
                 .title(event.getTitle())
-                .views(viewStatsDto.getHits())
+                .views(views)
                 .build();
+        if(event.getPublishedOn() != null) {
+            eventFullDto.setPublishedOn(toLocalDateTime(event.getPublishedOn()));
+        }
+        return eventFullDto;
     }
 
     public static List<EventFullDto> toEventFullDtoList(List<Event> events,
@@ -72,7 +77,7 @@ public class EventMapper {
                                                         List<ViewStatsDto> viewStatsDtos) {
         Map<Long, Category> categoriesById = makeCategoryMap(categories);
         Map<Long, User> usersById = makeUsersMap(users);
-        Map<Long, ViewStatsDto> viewsByEventId = makeViewStatsMap(viewStatsDtos);
+        Map<Long, Integer> viewsByEventId = makeViewMap(viewStatsDtos, events);
         Map<Long, Location> locationsById = makeLocationsMap(locations);
 
         return events.stream().map(event -> {
@@ -122,7 +127,7 @@ public class EventMapper {
                                                       List<ViewStatsDto> viewStatsDtos) {
         Map<Long, Category> categoriesById = makeCategoryMap(categories);
         Map<Long, User> usersById = makeUsersMap(users);
-        Map<Long, ViewStatsDto> viewsByEventId = makeViewStatsMap(viewStatsDtos);
+        Map<Long, Integer> viewsByEventId = makeViewMap(viewStatsDtos, events);
 
         return events.stream().map(event -> {
             long eventId = event.getId();
@@ -130,14 +135,19 @@ public class EventMapper {
                     categoriesById.get(event.getCategoryId()),
                     confirmedRequestsByEventId.get(eventId),
                     usersById.get(event.getInitiator()),
-                    viewsByEventId.get(eventId).getHits()
+                    viewsByEventId.get(eventId)
             );
         }).collect(Collectors.toList());
     }
 
-    private static Map<Long, ViewStatsDto> makeViewStatsMap(List<ViewStatsDto> viewStatsDtos) {
-        return viewStatsDtos.stream()
-                .collect(Collectors.toMap(EventMapper::getEventId, Function.identity()));
+    private static Map<Long, Integer> makeViewMap(List<ViewStatsDto> viewStatsDtos, List<Event> events) {
+        Map<Long, Integer> viewsByEventId = events.stream()
+                .collect(Collectors.toMap(Event::getId, event -> 0));
+        if (viewStatsDtos.isEmpty()) {
+            return viewsByEventId;
+        }
+        viewStatsDtos.forEach(viewStatsDto -> viewsByEventId.put(getEventId(viewStatsDto), (int) viewStatsDto.getHits()));
+        return viewsByEventId;
     }
 
     private static Map<Long, User> makeUsersMap(List<User> users) {

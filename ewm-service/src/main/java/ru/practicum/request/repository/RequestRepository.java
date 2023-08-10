@@ -1,6 +1,7 @@
 package ru.practicum.request.repository;
 
 import ru.practicum.request.Request;
+import ru.practicum.request.enums.RequestStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,7 @@ public interface RequestRepository {
 
     List<Request> getAllByRequesterId(long requesterId);
 
-    List<Long> findByRequestorId(long userId);
+    List<Long> findIdsByRequestorId(long userId);
 
     Request findById(long requestId);
 
@@ -24,5 +25,5 @@ public interface RequestRepository {
 
     List<Request> findByIds(List<Long> requestIds);
 
-    boolean update(List<Request> requestsToUpdate);
+    void updateStatuses(List<Long> requestIds, RequestStatus requestStatus);
 }

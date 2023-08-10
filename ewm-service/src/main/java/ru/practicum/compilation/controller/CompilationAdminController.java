@@ -22,6 +22,7 @@ public class CompilationAdminController {
     private final CompilationService service;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto add(@Valid @RequestBody NewCompilationDto newCompilationDto) {
         return service.add(newCompilationDto);
     }

@@ -2,11 +2,13 @@ package ru.practicum.request;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.service.RequestService;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
@@ -23,7 +25,9 @@ public class RequestPrivateController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto add(@PathVariable long userId,
+                                       @NotNull(message = "Отсутствует id события в запросе")
                                        @RequestParam Long eventId) {
         return service.add(userId, eventId);
     }

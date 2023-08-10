@@ -4,29 +4,44 @@ import lombok.Builder;
 import lombok.Data;
 import ru.practicum.event.enums.EventState;
 
-import javax.validation.constraints.FutureOrPresent;
-import javax.validation.constraints.Size;
+import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
 @Builder
 public class Event {
     long id;
-    @Size(min = 20, max = 2000, message = "Размер аннотации должен быть от 20 до 2000 символов")
     private String annotation;
     private long categoryId;
-    @Size(min = 20, max = 7000, message = "Размер описания должен быть от 20 до 7000 символов")
     private String description;
-    @FutureOrPresent(message = "Поле должно содержать дату, которая еще не наступила")
     private Instant eventDate;
     private long locationId;
     private boolean paid;
     private int participantLimit;
     private boolean requestModeration;
-    @Size(min = 3, max = 120, message = "Заголовок должен быть от 3 до 120 символов")
     private String title;
     private long initiator;
     private Instant createdOn;
     private Instant publishedOn;
     private EventState eventState;
+    private boolean available;
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("annotation", annotation);
+        map.put("category_id", categoryId);
+        map.put("description", description);
+        map.put("event_date", Timestamp.from(eventDate));
+        map.put("location_id", locationId);
+        map.put("paid", paid);
+        map.put("participant_limit", participantLimit);
+        map.put("request_moderation", requestModeration);
+        map.put("title", title);
+        map.put("initiator", initiator);
+        map.put("state", eventState.toString());
+        map.put("available", available);
+        return map;
+    }
 }

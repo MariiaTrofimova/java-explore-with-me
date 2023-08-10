@@ -7,7 +7,8 @@ public class Validation {
 
     public static void validateDates(LocalDateTime start, LocalDateTime end) {
         if (start.isAfter(end)) {
-            throw new ValidationException("Дата начала диапазона не может быть позже даты конца диапазона");
+            throw new ValidationException(String.format("Дата начала диапазона %s позже даты конца диапазона %s",
+                    start, end));
         }
     }
 }

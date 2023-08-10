@@ -46,12 +46,11 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional(readOnly = true)
     public List<CompilationDto> getAll(boolean pinned, int from, int size) {
-        int page = from / size;
-        from = page * size;
         List<Compilation> compilations = repository.getByParams(pinned, from, size);
         if (compilations.isEmpty()) {
             return Collections.emptyList();
         }
+        addEventIdsToCompilations(compilations);
         return makeCompilationDtoList(compilations);
     }
 
@@ -59,6 +58,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional(readOnly = true)
     public CompilationDto findById(long compId) {
         Compilation compilation = repository.findById(compId);
+        addEventIdsToCompilation(compilation);
         return makeCompilationDto(compilation);
     }
 
@@ -66,6 +66,7 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto add(NewCompilationDto newCompilationDto) {
         Compilation compilation = CompilationMapper.toCompilation(newCompilationDto);
         compilation = repository.add(compilation);
+        repository.addEventsByCompId(compilation.getId(), compilation.getEvents());
         return makeCompilationDto(compilation);
     }
 
@@ -102,6 +103,17 @@ public class CompilationServiceImpl implements CompilationService {
         List<String> uris = makeUris(events);
         LocalDateTime startStat = getStartTime(events);
         return client.getStatistics(startStat, NOW, uris);
+    }
+
+    private void addEventIdsToCompilation(Compilation compilation) {
+        List<Long> eventIds = repository.findEventIdsByCompId(compilation.getId());
+        compilation.addEvents(eventIds);
+    }
+
+    private void addEventIdsToCompilations(List<Compilation> compilations) {
+        Map<Long, List<Long>> eventIdsByCompIds = repository.findEventIdsByCompIds(compilations.stream()
+                .map(Compilation::getId).collect(Collectors.toList()));
+        compilations.forEach(compilation -> compilation.addEvents(eventIdsByCompIds.get(compilation.getId())));
     }
 
     private CompilationDto makeCompilationDto(Compilation compilation) {

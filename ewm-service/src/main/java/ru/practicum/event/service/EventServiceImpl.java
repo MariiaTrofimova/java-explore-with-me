@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import static ru.practicum.util.DateTime.toInstant;
 import static ru.practicum.util.Statistics.getStartTime;
 import static ru.practicum.util.Statistics.makeUris;
+import static ru.practicum.util.Validation.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -131,9 +132,13 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto add(long userId, NewEventDto newEventDto) {
         //валидация даты FORBIDDEN
+        if (newEventDto.getRequestModeration() == null) {
+            newEventDto.setRequestModeration(true);
+        }
         Location location = LocationMapper.toLocation(newEventDto.getLocation());
         long locationId = setIdToLocation(location);
-        Event event = repository.add(EventMapper.toEvent(newEventDto, locationId, userId));
+        Event event = EventMapper.toEvent(newEventDto, locationId, userId);
+        event = repository.add(event);
         return makeFullResponseDto(event, location);
     }
 
@@ -199,12 +204,15 @@ public class EventServiceImpl implements EventService {
         String titleToUpdate = updateEventDto.getTitle();
 
         if (annotationToUpdate != null) {
+            validateStringField(annotationToUpdate, "аннотация", 20, 2000);
             event.setAnnotation(annotationToUpdate);
         }
         if (categoryToUpdate != null) {
+            validatePositive(categoryToUpdate, "id категории");
             event.setCategoryId(categoryToUpdate);
         }
         if (descriptionToUpdate != null) {
+            validateStringField(descriptionToUpdate, "описание", 3, 7000);
             event.setDescription(descriptionToUpdate);
         }
         if (eventDateToUpdate != null) {
@@ -220,19 +228,15 @@ public class EventServiceImpl implements EventService {
             event.setPaid(paidToUpdate);
         }
         if (participantLimitToUpdate != null) {
+            validatePositive(participantLimitToUpdate, "максимальное количество участников");
             event.setParticipantLimit(participantLimitToUpdate);
         }
         if (requestModerationToUpdate != null) {
             event.setRequestModeration(requestModerationToUpdate);
         }
         if (titleToUpdate != null) {
+            validateStringField(titleToUpdate, "заголовок", 3, 120);
             event.setTitle(titleToUpdate);
-        }
-    }
-
-    private void validateEventDate(LocalDateTime eventDateToUpdate) {
-        if (!eventDateToUpdate.isAfter(NOW)) {
-            throw new ForbiddenException("Поле eventDate должно содержать дату, которая еще не наступила");
         }
     }
 
@@ -245,6 +249,9 @@ public class EventServiceImpl implements EventService {
                                   EventSort sort,
                                   int from,
                                   int size) {
+        if (text != null) {
+            text = text.toLowerCase();
+        }
         return Criteria.builder()
                 .text(text)
                 .categories(categoryIds)
@@ -267,8 +274,13 @@ public class EventServiceImpl implements EventService {
         User user = userRepo.findById(event.getInitiator());
         Category category = categoryRepo.findById(event.getCategoryId());
         int confirmedRequests = requestRepo.countConfirmedRequestsByEventId(event.getId());
-        ViewStatsDto viewStatsDto = makeStatRequest(List.of(event)).get(0);
-        return EventMapper.toEventFullDto(event, category, user, location, confirmedRequests, viewStatsDto);
+        int views = 0;
+        if (event.getPublishedOn() != null) {
+            List<ViewStatsDto> viewStatsDto = makeStatRequest(List.of(event));
+            views = viewStatsDto.isEmpty() ? 0 : (int) viewStatsDto.get(0).getHits();
+        }
+
+        return EventMapper.toEventFullDto(event, category, user, location, confirmedRequests, views);
     }
 
     private List<EventFullDto> makeFullResponseDtoList(List<Event> events) {
@@ -306,9 +318,12 @@ public class EventServiceImpl implements EventService {
 
 
     private List<ViewStatsDto> makeStatRequest(List<Event> events) {
+        if (events.stream().noneMatch(event -> event.getPublishedOn() != null)) {
+            return Collections.emptyList();
+        }
         List<String> uris = makeUris(events);
         LocalDateTime startStat = getStartTime(events);
-        return client.getStatistics(startStat, NOW, uris);
+        return client.getStatistics(startStat, LocalDateTime.now(), uris);
     }
 
     private void addEndHitPoint(String uri, String ip) {

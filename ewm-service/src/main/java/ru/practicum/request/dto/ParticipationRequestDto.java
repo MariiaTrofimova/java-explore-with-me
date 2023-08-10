@@ -17,5 +17,6 @@ public class ParticipationRequestDto {
     private LocalDateTime created;
     private long event;
     private long requester;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private RequestStatus status;
 }

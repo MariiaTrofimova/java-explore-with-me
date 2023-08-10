@@ -33,9 +33,10 @@ CREATE TABLE IF NOT EXISTS events
     request_moderation BOOLEAN                     NOT NULL,
     title              VARCHAR(120)                NOT NULL,
     initiator          BIGINT                      NOT NULL,
-    created_on         TIMESTAMP WITHOUT TIME ZONE default now(),
-    published_on       TIMESTAMP WITHOUT TIME ZONE,
-    state              VARCHAR(9),
+    created_on         TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+    published_on       TIMESTAMP WITHOUT TIME ZONE default NULL,
+    state              VARCHAR(9)                  NOT NULL,
+    available          BOOLEAN                     NOT NULL,
 
     CONSTRAINT fk_events_to_categories FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE,
     CONSTRAINT fk_events_to_locations FOREIGN KEY (location_id) REFERENCES locations (id) ON DELETE CASCADE,
@@ -47,7 +48,7 @@ CREATE TABLE IF NOT EXISTS requests
     id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     event_id     BIGINT NOT NULL,
     requester_id BIGINT NOT NULL,
-    created      TIMESTAMP WITHOUT TIME ZONE default now(),
+    created      TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     status       VARCHAR(9),
 
     CONSTRAINT fk_requests_to_events FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,

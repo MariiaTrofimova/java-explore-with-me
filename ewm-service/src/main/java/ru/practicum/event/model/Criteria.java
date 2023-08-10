@@ -19,5 +19,4 @@ public class Criteria {
     private EventSort sort;
     private int from;
     private int size;
-    private String ip;
 }

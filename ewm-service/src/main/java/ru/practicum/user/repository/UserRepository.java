@@ -11,7 +11,7 @@ public interface UserRepository {
 
     User add(User user);
 
-    List<User> getByIds(List<Long> ids, int from, int size);
+    List<User> findByIds(List<Long> ids, int from, int size);
 
     void deleteById(Long userId);
 }

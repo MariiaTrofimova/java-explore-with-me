@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import static ru.practicum.error.util.ErrorMessages.FROM_ERROR_MESSAGE;
 import static ru.practicum.error.util.ErrorMessages.SIZE_ERROR_MESSAGE;
 import static ru.practicum.util.DateTime.parseEncodedDateTime;
+import static ru.practicum.util.Validation.validateStartEndDates;
 
 @RestController
 @RequestMapping("/admin/events")
@@ -43,6 +44,7 @@ public class EventAdminController {
                 .collect(Collectors.toList());
         Instant start = parseEncodedDateTime(rangeStart);
         Instant end = parseEncodedDateTime(rangeEnd);
+        validateStartEndDates(start, end);
         return service.getAllByFiltersByAdmin(users, states, categories, start, end, from, size);
     }
 

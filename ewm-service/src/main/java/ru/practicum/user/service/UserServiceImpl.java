@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserDto> getByIds(List<Long> ids, int from, int size) {
-        List<User> users = repository.getByIds(ids, from, size);
+        List<User> users = repository.findByIds(ids, from, size);
         return UserMapper.toUserDto(users);
     }
 

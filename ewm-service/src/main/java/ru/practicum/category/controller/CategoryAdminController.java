@@ -20,6 +20,7 @@ public class CategoryAdminController {
     private final CategoryService service;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto add(@Valid @RequestBody NewCategoryDto newCategoryDto) {
         return service.add(newCategoryDto);
     }

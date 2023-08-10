@@ -8,6 +8,7 @@ import ru.practicum.event.enums.EventSort;
 import ru.practicum.event.service.EventService;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.ValidationException;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.Instant;
@@ -27,13 +28,13 @@ public class EventPublicController {
     private final EventService service;
 
     @GetMapping
-    public List<EventFullDto> getByFiltersPublic(@RequestParam String text,
-                                                 @RequestParam List<Long> categories,
-                                                 @RequestParam Boolean paid,
-                                                 @RequestParam String rangeStart,
-                                                 @RequestParam String rangeEnd,
+    public List<EventFullDto> getByFiltersPublic(@RequestParam(required = false) String text,
+                                                 @RequestParam(required = false) List<Long> categories,
+                                                 @RequestParam(required = false) Boolean paid,
+                                                 @RequestParam(required = false) String rangeStart,
+                                                 @RequestParam(required = false) String rangeEnd,
                                                  @RequestParam(defaultValue = "false") boolean onlyAvailable,
-                                                 @RequestParam(name = "sort") String sortParam,
+                                                 @RequestParam(required = false, name = "sort") String sortParam,
                                                  @PositiveOrZero(message = FROM_ERROR_MESSAGE)
                                                  @RequestParam(defaultValue = "0") Integer from,
                                                  @Positive(message = SIZE_ERROR_MESSAGE)
@@ -47,6 +48,11 @@ public class EventPublicController {
 
         Instant start = rangeStart == null ? NOW : parseEncodedDateTime(rangeStart);
         Instant end = rangeEnd == null ? null : parseEncodedDateTime(rangeEnd);
+        if (end != null) {
+            if (!end.isAfter(start)) {
+                throw new ValidationException("Дата окончания диапазона должна быть после даты начала");
+            }
+        }
         String ip = request.getRemoteAddr();
         return service.getByFiltersPublic(text, categories, paid, start, end, onlyAvailable, sort, from, size, ip);
     }
