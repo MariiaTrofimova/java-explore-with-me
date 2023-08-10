@@ -10,6 +10,7 @@ import ru.practicum.client.StatsClient;
 import ru.practicum.client.exception.StatsRequestException;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
+import ru.practicum.error.exceptions.ForbiddenException;
 import ru.practicum.error.exceptions.NotFoundException;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.LocationDto;
@@ -30,7 +31,6 @@ import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.User;
 import ru.practicum.user.repository.UserRepository;
 
-import javax.validation.ValidationException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -130,6 +130,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto add(long userId, NewEventDto newEventDto) {
+        //валидация даты FORBIDDEN
         Location location = LocationMapper.toLocation(newEventDto.getLocation());
         long locationId = setIdToLocation(location);
         Event event = repository.add(EventMapper.toEvent(newEventDto, locationId, userId));
@@ -153,7 +154,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto update(long userId, long eventId, UpdateEventDto updateEventDto) {
         Event event = repository.findById(eventId);
         if (event.getEventState() == EventState.PUBLISHED) {
-            throw new ValidationException("Only pending or canceled events can be changed");
+            throw new ForbiddenException("Only pending or canceled events can be changed");
         }
         checkInitiator(event, userId);
         updateNotNullFields(event, updateEventDto);
@@ -231,7 +232,7 @@ public class EventServiceImpl implements EventService {
 
     private void validateEventDate(LocalDateTime eventDateToUpdate) {
         if (!eventDateToUpdate.isAfter(NOW)) {
-            throw new IllegalArgumentException("Поле eventDate должно содержать дату, которая еще не наступила");
+            throw new ForbiddenException("Поле eventDate должно содержать дату, которая еще не наступила");
         }
     }
 
@@ -328,7 +329,7 @@ public class EventServiceImpl implements EventService {
 
     private void checkInitiator(Event event, long userId) {
         if (event.getInitiator() != userId) {
-            throw new RuntimeException(
+            throw new NotFoundException(
                     String.format("Пользователь с id %d не организатор события с id %d", userId, event.getId()));
         }
     }

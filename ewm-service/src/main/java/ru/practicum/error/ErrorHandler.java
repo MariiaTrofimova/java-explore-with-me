@@ -1,11 +1,8 @@
 package ru.practicum.error;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -13,89 +10,146 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import ru.practicum.client.exception.StatsRequestException;
-import ru.practicum.error.model.ErrorResponse;
+import ru.practicum.error.exceptions.ConflictException;
+import ru.practicum.error.exceptions.ForbiddenException;
+import ru.practicum.error.model.ApiError;
 
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
-
-    private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+    private static final LocalDateTime NOW = LocalDateTime.now();
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleStatsRequestException(final StatsRequestException e) {
+    public ApiError handleStatsRequestException(final StatsRequestException e) {
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage());
+        return ApiError.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .reason("The required object was not found.")
+                .message(e.getMessage())
+                .timestamp(NOW)
+                .build();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidationException(final ValidationException e) {
+    public ApiError handleValidationException(final ValidationException e) {
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage());
+        return ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .reason("Incorrectly made request.")
+                .message(e.getMessage())
+                .timestamp(NOW)
+                .build();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleIllegalArgumentException(final IllegalArgumentException e) {
+    public ApiError handleIllegalArgumentException(final IllegalArgumentException e) {
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage());
+        return ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .reason("Incorrectly made request.")
+                .message(e.getMessage())
+                .timestamp(NOW)
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleConstraintViolationException(final ConstraintViolationException e) {
+        log.error(e.getMessage(), e);
+        return ApiError.builder()
+                .status(HttpStatus.CONFLICT)
+                .reason("Integrity constraint has been violated.")
+                .message(e.getMessage())
+                .timestamp(NOW)
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleConflictException(final ConflictException e) {
+        log.error(e.getMessage(), e);
+        return ApiError.builder()
+                .status(HttpStatus.CONFLICT)
+                .reason("Integrity constraint has been violated.")
+                .message(e.getMessage())
+                .timestamp(NOW)
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError handleForbiddenException(final ForbiddenException e) {
+        log.error(e.getMessage(), e);
+        return ApiError.builder()
+                .status(HttpStatus.FORBIDDEN)
+                .reason("For the requested operation the conditions are not met.")
+                .message(e.getMessage())
+                .timestamp(NOW)
+                .build();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e) {
-        log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMethodArgumentTypeMismatchException(final MethodArgumentTypeMismatchException e) {
-        ErrorResponse response = new ErrorResponse(String.format("Переменная %s: %s должна быть %s.",
-                e.getName(), e.getValue(), Objects.requireNonNull(e.getRequiredType()).getSimpleName()));
+    public ApiError handleMethodArgumentTypeMismatchException(final MethodArgumentTypeMismatchException e) {
+        String message = String.format("Переменная %s: %s должна быть %s.",
+                e.getName(), e.getValue(), Objects.requireNonNull(e.getRequiredType()).getSimpleName());
         log.error("Переменная {}: {} должна быть {}.",
                 e.getName(), e.getValue(), e.getRequiredType().getSimpleName());
-        return response;
+        return ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .reason("Incorrectly made request.")
+                .message(message)
+                .timestamp(NOW)
+                .build();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMethodArgumentNotValid(final MethodArgumentNotValidException e) throws JsonProcessingException {
-        Map<String, String> errors = new HashMap<>();
+    public ApiError handleMethodArgumentNotValid(final MethodArgumentNotValidException e) {
+        StringBuilder message = new StringBuilder();
         e.getBindingResult().getFieldErrors().forEach((error) -> {
             String fieldName = error.getField();
-            String message = error.getDefaultMessage();
-            errors.put(fieldName, message);
+            String messageForField = error.getDefaultMessage();
+            message.append("Field: ").append(fieldName).append(", Error: ").append(messageForField).append("\n");
         });
-        log.error(mapper.writeValueAsString(errors), e);
-        return new ErrorResponse(errors);
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMissingRequestHeaderException(final MissingRequestHeaderException e) {
-        log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage());
+        log.error(message.toString());
+        return ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .reason("Incorrectly made request.")
+                .message(message.toString())
+                .timestamp(NOW)
+                .build();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNoHandlerFoundException(final NoHandlerFoundException e, WebRequest request) {
-        log.error("Неизвестный запрос.");
-        return new ErrorResponse("Неизвестный запрос.");
+    public ApiError handleNoHandlerFoundException(final NoHandlerFoundException e, WebRequest request) {
+        log.error("Неизвестный запрос: {}", request.getHeaderNames());
+        return ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .reason("The required object was not found.")
+                .message(e.getMessage())
+                .timestamp(NOW)
+                .build();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleThrowable(final Throwable e) {
+    public ApiError handleThrowable(final Throwable e) {
         log.error("Произошла непредвиденная ошибка: " + e.getMessage(), e);
-        return new ErrorResponse("Произошла непредвиденная ошибка: " + e.getMessage());
+        return ApiError.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .reason("An unexpected error has occurred.")
+                .message(e.getMessage())
+                .timestamp(NOW)
+                .build();
     }
 }
