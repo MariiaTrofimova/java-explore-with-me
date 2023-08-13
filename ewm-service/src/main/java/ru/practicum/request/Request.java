@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import ru.practicum.request.enums.RequestStatus;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +21,6 @@ public class Request {
         Map<String, Object> map = new HashMap<>();
         map.put("event_id", eventId);
         map.put("requester_id", requesterId);
-        map.put("created", Timestamp.from(created));
         map.put("status", status.toString());
         return map;
     }

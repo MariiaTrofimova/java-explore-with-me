@@ -10,7 +10,7 @@ import ru.practicum.client.StatsClient;
 import ru.practicum.client.exception.StatsRequestException;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
-import ru.practicum.error.exceptions.ForbiddenException;
+import ru.practicum.error.exceptions.ConflictException;
 import ru.practicum.error.exceptions.NotFoundException;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.LocationDto;
@@ -38,9 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static ru.practicum.event.enums.EventState.PUBLISHED;
 import static ru.practicum.util.DateTime.toInstant;
-import static ru.practicum.util.Statistics.getStartTime;
-import static ru.practicum.util.Statistics.makeUris;
+import static ru.practicum.util.Statistics.*;
 import static ru.practicum.util.Validation.*;
 
 @Service
@@ -50,7 +50,6 @@ import static ru.practicum.util.Validation.*;
 public class EventServiceImpl implements EventService {
     private static final String APP = "ewm-main-service";
     private static final String URI = "/events";
-    private static final LocalDateTime NOW = LocalDateTime.now();
 
     private final EventRepository repository;
     private final CategoryRepository categoryRepo;
@@ -60,14 +59,23 @@ public class EventServiceImpl implements EventService {
     private final StatsClient client;
 
     @Override
-    public List<EventFullDto> getAllByFiltersByAdmin(List<Long> users,
-                                                     List<EventState> states,
-                                                     List<Long> categories,
-                                                     Instant start,
-                                                     Instant end,
-                                                     int from,
-                                                     int size) {
-        List<Event> events = repository.getByFilters(users, states, categories, start, end, from, size);
+    public List<EventFullDto> getAllByCriteriaByAdmin(List<Long> users,
+                                                      List<String> states,
+                                                      List<Long> categoryIds,
+                                                      Instant start,
+                                                      Instant end,
+                                                      int from,
+                                                      int size) {
+        Criteria criteria = Criteria.builder()
+                .users(users)
+                .states(states)
+                .categories(categoryIds)
+                .start(start)
+                .end(end)
+                .from(from)
+                .size(size)
+                .build();
+        List<Event> events = repository.getByCriteria(criteria);
         return makeFullResponseDtoList(events);
     }
 
@@ -78,6 +86,10 @@ public class EventServiceImpl implements EventService {
         updateNotNullFields(event, updateEventDto);
         String stateAction = updateEventDto.getStateAction();
         if (stateAction != null) {
+            if (event.getEventState() != EventState.PENDING) {
+                log.warn("Событие можно опубликовать или отклонить только в состоянии PENDING");
+                throw new ConflictException("Событие можно опубликовать или отклонить только в состоянии PENDING");
+            }
             setEventStateByAdminAction(event, stateAction);
         }
         event = repository.update(event);
@@ -96,7 +108,22 @@ public class EventServiceImpl implements EventService {
                                                  int size,
                                                  String ip) {
 
-        Criteria criteria = makeCriteria(text, categoryIds, paid, start, end, onlyAvailable, sort, from, size);
+        if (text != null) {
+            text = text.toLowerCase();
+        }
+
+        Criteria criteria = Criteria.builder()
+                .text(text)
+                .categories(categoryIds)
+                .paid(paid)
+                .start(start)
+                .end(end)
+                .onlyAvailable(onlyAvailable)
+                .sort(sort)
+                .from(from)
+                .size(size)
+                .published(true)
+                .build();
         List<Event> events = repository.getByCriteria(criteria);
         addEndHitPoint(URI, ip);
         return makeFullResponseDtoList(events);
@@ -105,7 +132,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto getByIdPublic(long id, String ip) {
         Event event = repository.findById(id);
-        if (event.getEventState() != EventState.PUBLISHED) {
+        if (event.getEventState() != PUBLISHED) {
             log.warn("Попытка просмотра неопубликованного события с id {} незарегистрированным пользователем с ip {}",
                     id, ip);
             throw new NotFoundException(String.format("Событие с id %d еще не опубликовано", id));
@@ -131,7 +158,6 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto add(long userId, NewEventDto newEventDto) {
-        //валидация даты FORBIDDEN
         if (newEventDto.getRequestModeration() == null) {
             newEventDto.setRequestModeration(true);
         }
@@ -158,8 +184,8 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto update(long userId, long eventId, UpdateEventDto updateEventDto) {
         Event event = repository.findById(eventId);
-        if (event.getEventState() == EventState.PUBLISHED) {
-            throw new ForbiddenException("Only pending or canceled events can be changed");
+        if (event.getEventState() == PUBLISHED) {
+            throw new ConflictException("Only pending or canceled events can be changed");
         }
         checkInitiator(event, userId);
         updateNotNullFields(event, updateEventDto);
@@ -185,7 +211,7 @@ public class EventServiceImpl implements EventService {
         StateActionAdmin action = StateActionAdmin.from(stateAction)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + stateAction));
         if (action == StateActionAdmin.PUBLISH_EVENT) {
-            event.setEventState(EventState.PUBLISHED);
+            event.setEventState(PUBLISHED);
             event.setPublishedOn(Instant.now());
         } else {
             event.setEventState(EventState.CANCELED);
@@ -212,7 +238,7 @@ public class EventServiceImpl implements EventService {
             event.setCategoryId(categoryToUpdate);
         }
         if (descriptionToUpdate != null) {
-            validateStringField(descriptionToUpdate, "описание", 3, 7000);
+            validateStringField(descriptionToUpdate, "описание", 20, 7000);
             event.setDescription(descriptionToUpdate);
         }
         if (eventDateToUpdate != null) {
@@ -240,31 +266,6 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private Criteria makeCriteria(String text,
-                                  List<Long> categoryIds,
-                                  Boolean paid,
-                                  Instant start,
-                                  Instant end,
-                                  boolean onlyAvailable,
-                                  EventSort sort,
-                                  int from,
-                                  int size) {
-        if (text != null) {
-            text = text.toLowerCase();
-        }
-        return Criteria.builder()
-                .text(text)
-                .categories(categoryIds)
-                .paid(paid)
-                .start(start)
-                .end(end)
-                .onlyAvailable(onlyAvailable)
-                .sort(sort)
-                .from(from)
-                .size(size)
-                .build();
-    }
-
     private EventFullDto makeFullResponseDto(Event event) {
         Location location = locationRepo.findById(event.getLocationId());
         return makeFullResponseDto(event, location);
@@ -275,8 +276,17 @@ public class EventServiceImpl implements EventService {
         Category category = categoryRepo.findById(event.getCategoryId());
         int confirmedRequests = requestRepo.countConfirmedRequestsByEventId(event.getId());
         int views = 0;
-        if (event.getPublishedOn() != null) {
+        if (event.getEventState() == PUBLISHED) {
             List<ViewStatsDto> viewStatsDto = makeStatRequest(List.of(event));
+            if (!viewStatsDto.isEmpty()) {
+                long eventId = getEventId(viewStatsDto.get(0));
+                if (event.getId() != eventId) {
+                    throw new StatsRequestException(
+                            String.format("Ошибка запроса статистики: запрошенный id %d не соответствует возвращенному %d",
+                                    event.getId(), eventId)
+                    );
+                }
+            }
             views = viewStatsDto.isEmpty() ? 0 : (int) viewStatsDto.get(0).getHits();
         }
 
@@ -318,12 +328,16 @@ public class EventServiceImpl implements EventService {
 
 
     private List<ViewStatsDto> makeStatRequest(List<Event> events) {
-        if (events.stream().noneMatch(event -> event.getPublishedOn() != null)) {
+        if (events.stream().noneMatch(event -> event.getEventState() == PUBLISHED)) {
             return Collections.emptyList();
         }
-        List<String> uris = makeUris(events);
-        LocalDateTime startStat = getStartTime(events);
-        return client.getStatistics(startStat, LocalDateTime.now(), uris);
+        List<Event> eventsPublished = events.stream()
+                .filter(event -> event.getEventState() == PUBLISHED)
+                .collect(Collectors.toList());
+        List<String> uris = makeUris(eventsPublished);
+        LocalDateTime startStat = getStartTime(eventsPublished);
+        boolean unique = true;
+        return client.getStatistics(startStat.minusHours(1), LocalDateTime.now(), uris, unique);
     }
 
     private void addEndHitPoint(String uri, String ip) {
@@ -331,7 +345,7 @@ public class EventServiceImpl implements EventService {
                 .app(APP)
                 .uri(uri)
                 .ip(ip)
-                .timestamp(NOW)
+                .timestamp(LocalDateTime.now())
                 .build();
         try {
             client.addEndPointHit(hitDto);

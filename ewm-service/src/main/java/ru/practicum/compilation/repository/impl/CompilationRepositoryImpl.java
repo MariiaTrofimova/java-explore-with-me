@@ -15,9 +15,9 @@ import ru.practicum.error.exceptions.NotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -57,14 +57,13 @@ public class CompilationRepositoryImpl implements CompilationRepository {
                 .usingGeneratedKeyColumns("id");
         long id = simpleJdbcInsert.executeAndReturnKey(compilation.toMap()).longValue();
         compilation.setId(id);
-        //раскидать подборку?
         return compilation;
     }
 
     @Override
     public void deleteById(long id) {
         String sql = "delete from compilations where id = ?";
-        if (jdbcTemplate.update(sql, id) < 0) {
+        if (jdbcTemplate.update(sql, id) <= 0) {
             reportNotFound(id);
         }
     }
@@ -75,7 +74,7 @@ public class CompilationRepositoryImpl implements CompilationRepository {
         MapSqlParameterSource parameters = new MapSqlParameterSource("id", compilation.getId());
         parameters.addValue("pinned", compilation.isPinned());
         parameters.addValue("title", compilation.getTitle());
-        if (jdbcTemplate.update(sql, parameters) < 0) {
+        if (namedJdbcTemplate.update(sql, parameters) < 0) {
             reportNotFound(compilation.getId());
         }
         return compilation;
@@ -93,8 +92,8 @@ public class CompilationRepositoryImpl implements CompilationRepository {
         MapSqlParameterSource parameters = new MapSqlParameterSource("compId", compId);
         String values = IntStream.range(0, eventIds.size())
                 .peek(i -> parameters.addValue("eventId" + i, eventIds.get(i)))
-                .mapToObj(String::valueOf)
-                .collect(Collectors.joining(", ", "(:compId, :eventId", ")"));
+                .mapToObj(i -> "(:compId, :eventId" + i + ")")
+                .collect(Collectors.joining(", "));
         sql.append(values);
         namedJdbcTemplate.update(sql.toString(), parameters);
     }
@@ -110,16 +109,24 @@ public class CompilationRepositoryImpl implements CompilationRepository {
     public Map<Long, List<Long>> findEventIdsByCompIds(List<Long> compIds) {
         String sql = "select compilation_id, event_id from compilations_events where compilation_id in (:compIds)";
         MapSqlParameterSource parameters = new MapSqlParameterSource("compIds", compIds);
-        final Map<Long, List<Long>> eventIdsByCompIds = new HashMap<>();
+        final Map<Long, List<Long>> eventIdsByCompIds = compIds.stream()
+                .collect(Collectors.toMap(Function.identity(), id -> new ArrayList<>()));
 
         namedJdbcTemplate.query(sql, parameters,
                 rs -> {
                     long compId = rs.getLong("compilation_id");
                     long eventId = rs.getLong("event_id");
-                    eventIdsByCompIds.computeIfAbsent(compId, k -> new ArrayList<>())
-                            .add(eventId);
+                    eventIdsByCompIds.get(compId).add(eventId);
                 });
         return eventIdsByCompIds;
+    }
+
+    @Override
+    public List<Compilation> getAll(int from, int size) {
+        String sql = "select * from compilations order by id limit :size offset :from";
+        MapSqlParameterSource parameters = new MapSqlParameterSource("from", from);
+        parameters.addValue("size", size);
+        return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToCompilation(rs));
     }
 
     private Compilation mapRowToCompilation(ResultSet rs) throws SQLException {

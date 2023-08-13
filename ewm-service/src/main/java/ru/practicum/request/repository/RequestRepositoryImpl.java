@@ -78,10 +78,10 @@ public class RequestRepositoryImpl implements RequestRepository {
     }
 
     @Override
-    public List<Long> findIdsByRequestorId(long requesterId) {
-        String sql = "select id from requests where requester_id = :requesterId";
+    public List<Long> findEventIdsByRequestorId(long requesterId) {
+        String sql = "select event_id from requests where requester_id = :requesterId";
         MapSqlParameterSource parameters = new MapSqlParameterSource("requesterId", requesterId);
-        return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> rs.getLong("id"));
+        return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> rs.getLong("event_id"));
     }
 
     @Override
@@ -114,7 +114,7 @@ public class RequestRepositoryImpl implements RequestRepository {
     @Override
     public List<Request> findByIds(List<Long> requestIds) {
         String sql = "select * from requests where id in (:requestIds)";
-        MapSqlParameterSource parameters = new MapSqlParameterSource("eventIds", requestIds);
+        MapSqlParameterSource parameters = new MapSqlParameterSource("requestIds", requestIds);
         return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToRequest(rs));
     }
 
@@ -123,6 +123,13 @@ public class RequestRepositoryImpl implements RequestRepository {
         String sql = "update requests set status = :status where id in (:requestIds)";
         MapSqlParameterSource parameters = new MapSqlParameterSource("requestIds", requestIds);
         parameters.addValue("status", requestStatus.toString());
+        namedJdbcTemplate.update(sql, parameters);
+    }
+
+    @Override
+    public void cancel(long requestId) {
+        String sql = "update requests set status = 'CANCELED' where id = :requestId";
+        MapSqlParameterSource parameters = new MapSqlParameterSource("requestId", requestId);
         namedJdbcTemplate.update(sql, parameters);
     }
 

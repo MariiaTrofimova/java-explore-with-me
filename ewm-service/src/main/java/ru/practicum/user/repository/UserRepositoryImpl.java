@@ -60,6 +60,14 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public List<User> get(int from, int size) {
+        String sql = "select * from users order by id limit :size offset :from";
+        MapSqlParameterSource parameters = new MapSqlParameterSource("from", from);
+        parameters.addValue("size", size);
+        return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToUser(rs));
+    }
+
+    @Override
     public void deleteById(Long id) {
         String sql = "delete from users where id = ?";
         if (jdbcTemplate.update(sql, id) < 0) {

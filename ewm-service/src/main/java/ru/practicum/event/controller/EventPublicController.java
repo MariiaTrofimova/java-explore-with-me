@@ -8,7 +8,6 @@ import ru.practicum.event.enums.EventSort;
 import ru.practicum.event.service.EventService;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.ValidationException;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.Instant;
@@ -17,6 +16,7 @@ import java.util.List;
 import static ru.practicum.error.util.ErrorMessages.FROM_ERROR_MESSAGE;
 import static ru.practicum.error.util.ErrorMessages.SIZE_ERROR_MESSAGE;
 import static ru.practicum.util.DateTime.parseEncodedDateTime;
+import static ru.practicum.util.Validation.validateStartEndDates;
 
 @RestController
 @RequestMapping(path = "/events")
@@ -49,9 +49,7 @@ public class EventPublicController {
         Instant start = rangeStart == null ? NOW : parseEncodedDateTime(rangeStart);
         Instant end = rangeEnd == null ? null : parseEncodedDateTime(rangeEnd);
         if (end != null) {
-            if (!end.isAfter(start)) {
-                throw new ValidationException("Дата окончания диапазона должна быть после даты начала");
-            }
+            validateStartEndDates(start, end);
         }
         String ip = request.getRemoteAddr();
         return service.getByFiltersPublic(text, categories, paid, start, end, onlyAvailable, sort, from, size, ip);

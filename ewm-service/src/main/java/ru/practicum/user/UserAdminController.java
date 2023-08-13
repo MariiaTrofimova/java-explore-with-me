@@ -9,6 +9,7 @@ import ru.practicum.user.dto.NewUserRequest;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.service.UserService;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
@@ -27,17 +28,17 @@ public class UserAdminController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDto add(@RequestBody NewUserRequest newUserRequest) {
+    public UserDto add(@Valid @RequestBody NewUserRequest newUserRequest) {
         return service.add(newUserRequest);
     }
 
     @GetMapping
-    public List<UserDto> getByIds(@RequestParam(required = false, defaultValue = "") List<Long> ids,
-                                  @PositiveOrZero(message = FROM_ERROR_MESSAGE)
-                                  @RequestParam(defaultValue = "0") Integer from,
-                                  @Positive(message = SIZE_ERROR_MESSAGE)
-                                  @RequestParam(defaultValue = "10") Integer size) {
-        return service.getByIds(ids, from, size);
+    public List<UserDto> get(@RequestParam(defaultValue = "") List<Long> ids,
+                             @PositiveOrZero(message = FROM_ERROR_MESSAGE)
+                             @RequestParam(defaultValue = "0") Integer from,
+                             @Positive(message = SIZE_ERROR_MESSAGE)
+                             @RequestParam(defaultValue = "10") Integer size) {
+        return service.get(ids, from, size);
     }
 
     @DeleteMapping("/{userId}")

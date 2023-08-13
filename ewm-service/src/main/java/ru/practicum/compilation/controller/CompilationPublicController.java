@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.service.CompilationService;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
@@ -25,8 +24,7 @@ public class CompilationPublicController {
     private final CompilationService service;
 
     @GetMapping
-    public List<CompilationDto> getAll(@NotNull
-                                       @RequestParam Boolean pinned,
+    public List<CompilationDto> getAll(@RequestParam(required = false) Boolean pinned,
                                        @PositiveOrZero(message = FROM_ERROR_MESSAGE)
                                        @RequestParam(defaultValue = "0") Integer from,
                                        @Positive(message = SIZE_ERROR_MESSAGE)

@@ -24,8 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static ru.practicum.request.enums.RequestStatus.CONFIRMED;
-import static ru.practicum.request.enums.RequestStatus.REJECTED;
+import static ru.practicum.request.enums.RequestStatus.*;
 
 @Service
 @Transactional
@@ -50,17 +49,22 @@ public class RequestServiceImpl implements RequestService {
     public ParticipationRequestDto add(long userId, long eventId) {
         Event event = eventRepo.findById(eventId);
         validateRequest(event, eventId, userId);
-
         Request request = Request.builder()
                 .requesterId(userId)
                 .eventId(eventId)
                 .build();
-        if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
+        if (!event.isRequestModeration() && event.isAvailable() || event.getParticipantLimit() == 0) {
             request.setStatus(CONFIRMED);
         } else {
             request.setStatus(RequestStatus.PENDING);
         }
         request = repository.add(request);
+        if (request.getStatus() == CONFIRMED && event.getParticipantLimit() != 0) {
+            int confirmedRequests = repository.countConfirmedRequestsByEventId(eventId);
+            if (confirmedRequests == event.getParticipantLimit()) {
+                eventRepo.setAvailable(eventId, false);
+            }
+        }
         return RequestMapper.toParticipationRequestDto(request);
     }
 
@@ -73,10 +77,11 @@ public class RequestServiceImpl implements RequestService {
                     String.format("Редактирование запроса с id %d недоступно для пользователя с id %d",
                             requestId, userId));
         }
-        repository.deleteById(requestId);
         if (request.getStatus() == CONFIRMED) {
             eventRepo.setAvailable(request.getEventId(), true);
         }
+        repository.cancel(requestId);
+        request.setStatus(CANCELED);
         return RequestMapper.toParticipationRequestDto(request);
     }
 
@@ -165,28 +170,28 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private void validateRequest(Event event, long eventId, long userId) {
-        List<Long> userRequestIds = repository.findIdsByRequestorId(userId);
+        if (!event.isAvailable()) {
+            reportLimitConflict(eventId, event.getParticipantLimit());
+        }
+        List<Long> userRequestIds = repository.findEventIdsByRequestorId(userId);
         if (userRequestIds.contains(eventId)) {
             log.warn("Попытка повторного запроса на участие в событии с id {} от пользователя с id {}",
                     eventId, userId);
-            throw new ValidationException(
+            throw new ConflictException(
                     String.format("Нельзя добавить повторный запрос событии с id %d", eventId));
         }
         if (event.getInitiator() == userId) {
             log.warn("Попытка запроса на участие в событии с id {} от инициатора с id {}",
                     eventId, userId);
-            throw new ValidationException(
+            throw new ConflictException(
                     String.format("Инициатор события с id %d не может добавить запрос на участие в своём событии с id %d",
                             userId, eventId));
         }
         if (event.getEventState() != EventState.PUBLISHED) {
             log.warn("Попытка заявки на участие в неопубликованном событии с id {} от пользователя с id {}",
                     eventId, userId);
-            throw new ValidationException(
+            throw new ConflictException(
                     String.format("Нельзя участвовать в неопубликованном событии с id %d", eventId));
-        }
-        if (!event.isAvailable()) {
-            reportLimitConflict(eventId, event.getParticipantLimit());
         }
     }
 

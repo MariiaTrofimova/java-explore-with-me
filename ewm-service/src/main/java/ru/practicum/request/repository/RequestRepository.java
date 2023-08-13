@@ -15,8 +15,6 @@ public interface RequestRepository {
 
     List<Request> getAllByRequesterId(long requesterId);
 
-    List<Long> findIdsByRequestorId(long userId);
-
     Request findById(long requestId);
 
     void deleteById(long requestId);
@@ -26,4 +24,8 @@ public interface RequestRepository {
     List<Request> findByIds(List<Long> requestIds);
 
     void updateStatuses(List<Long> requestIds, RequestStatus requestStatus);
+
+    void cancel(long requestId);
+
+    List<Long> findEventIdsByRequestorId(long userId);
 }

@@ -23,4 +23,6 @@ public interface CompilationRepository {
     List<Long> findEventIdsByCompId(long id);
 
     Map<Long, List<Long>> findEventIdsByCompIds(List<Long> collect);
+
+    List<Compilation> getAll(int from, int size);
 }

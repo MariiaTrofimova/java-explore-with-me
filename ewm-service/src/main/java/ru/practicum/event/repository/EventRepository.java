@@ -1,6 +1,5 @@
 package ru.practicum.event.repository;
 
-import ru.practicum.event.enums.EventState;
 import ru.practicum.event.model.Criteria;
 import ru.practicum.event.model.Event;
 
@@ -12,7 +11,7 @@ public interface EventRepository {
     List<Event> getByCriteria(Criteria criteria);
 
     List<Event> getByFilters(List<Long> users,
-                             List<EventState> states,
+                             List<String> states,
                              List<Long> categories,
                              Instant start, Instant end,
                              int from, int size);

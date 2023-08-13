@@ -41,7 +41,10 @@ public class EventRepositoryImpl implements EventRepository {
         List<String> conditions = new ArrayList<>();
         MapSqlParameterSource parameters = new MapSqlParameterSource();
 
-        conditions.add("state = 'PUBLISHED'");
+
+        if (criteria.getPublished() != null) {
+            conditions.add("state = 'PUBLISHED'");
+        }
 
         if (criteria.getText() != null) {
             List<String> textParams = List.of("annotation", "description", "title");
@@ -57,21 +60,35 @@ public class EventRepositoryImpl implements EventRepository {
             parameters.addValue("paid", criteria.getPaid());
         }
 
-        parameters.addValue("start", Timestamp.from(criteria.getStart()));
+        if (criteria.getStart() != null) {
+            conditions.add("event_date >= :start");
+            parameters.addValue("start", Timestamp.from(criteria.getStart()));
+        }
+
         if (criteria.getEnd() != null) {
-            conditions.add("(event_date between :start and :end)");
+            conditions.add("(event_date <= :end)");
             parameters.addValue("end", Timestamp.from(criteria.getEnd()));
-        } else {
-            conditions.add("event_date > :start");
         }
 
         if (criteria.isOnlyAvailable()) {
             conditions.add("available = true");
         }
 
-        String allConditions = conditions.stream()
-                .collect(Collectors.joining(" AND ", "(", ")"));
-        sql.append(" where ").append(allConditions);
+        if (criteria.getUsers() != null) {
+            conditions.add("initiator in (:initiators)");
+            parameters.addValue("initiators", criteria.getUsers());
+        }
+
+        if (criteria.getStates() != null) {
+            conditions.add("state in (:states)");
+            parameters.addValue("states", criteria.getStates());
+        }
+
+        if (!conditions.isEmpty()) {
+            String allConditions = conditions.stream()
+                    .collect(Collectors.joining(" AND ", "(", ")"));
+            sql.append(" where ").append(allConditions);
+        }
 
         if (criteria.getSort() != null && criteria.getSort() == EventSort.EVENT_DATE) {
             sql.append(" order by event_date");
@@ -86,21 +103,20 @@ public class EventRepositoryImpl implements EventRepository {
 
     @Override
     public List<Event> getByFilters(List<Long> initiatorIds,
-                                    List<EventState> states,
+                                    List<String> states,
                                     List<Long> categories,
                                     Instant start,
                                     Instant end,
                                     int from,
                                     int size) {
-        String sql = "select * from events a where initiator in (:initiatorIds) " +
+        String sql = "select * from events where initiator in (:initiatorIds) " +
                 "AND state in (:states) " +
                 "AND category_id in (:categories) " +
                 "AND (event_date between :start and :end) " +
                 "order by id " +
                 "limit :size offset :from";
         MapSqlParameterSource parameters = new MapSqlParameterSource("initiatorIds", initiatorIds);
-        List<String> stateString = states.stream().map(String::valueOf).collect(Collectors.toList());
-        parameters.addValue("states", stateString);
+        parameters.addValue("states", states);
         parameters.addValue("categories", categories);
         parameters.addValue("start", Timestamp.from(start));
         parameters.addValue("end", Timestamp.from(end));
@@ -160,20 +176,14 @@ public class EventRepositoryImpl implements EventRepository {
                 "created_on = :createdOn ";
         MapSqlParameterSource parameters = makeParameterMap(event);
         if (event.getEventState() == EventState.PUBLISHED) {
-            sql = sql + ", published_on = :publishedOn ";
+            sql = sql + ", published_on = :publishedOn , state = 'PUBLISHED' ";
+        } else if (event.getEventState() == EventState.CANCELED) {
+            sql = sql + ", state = 'CANCELED' ";
         }
         sql = sql + "where id = :id";
         if (namedJdbcTemplate.update(sql, parameters) > 0) {
             return event;
         }
-        //org.springframework.dao.DataIntegrityViolationException: PreparedStatementCallback;
-        // SQL [update events set annotation = ?, category_id = ?, description = ?, event_date = ?,
-        // location_id = ?, paid = ?, participant_limit = ?, request_moderation = ?, title = ?,
-        // initiator = ?, created_on = ? where id = ?];
-        // ERROR: value too long for type character varying(120);
-        // nested exception is org.postgresql.util.PSQLException:
-        // ERROR: value too long for type character varying(120)
-        //ERROR:  value too long for type character varying(7000)
         log.warn("Событие с id {} не найдено", event.getId());
         throw new NotFoundException(String.format("Событие с id %d не найдено", event.getId()));
     }
@@ -258,7 +268,7 @@ public class EventRepositoryImpl implements EventRepository {
                 .build();
 
         if (eventState == EventState.PUBLISHED) {
-            Instant publishedOn = rs.getTimestamp("publishedOn").toInstant();
+            Instant publishedOn = rs.getTimestamp("published_on").toInstant();
             event.setPublishedOn(publishedOn);
         }
         return event;

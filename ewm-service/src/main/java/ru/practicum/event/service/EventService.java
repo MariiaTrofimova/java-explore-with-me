@@ -4,19 +4,18 @@ import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventDto;
 import ru.practicum.event.enums.EventSort;
-import ru.practicum.event.enums.EventState;
 
 import java.time.Instant;
 import java.util.List;
 
 public interface EventService {
-    List<EventFullDto> getAllByFiltersByAdmin(List<Long> users,
-                                              List<EventState> states,
-                                              List<Long> categories,
-                                              Instant start,
-                                              Instant end,
-                                              int from,
-                                              int size);
+    List<EventFullDto> getAllByCriteriaByAdmin(List<Long> users,
+                                               List<String> states,
+                                               List<Long> categories,
+                                               Instant start,
+                                               Instant end,
+                                               int from,
+                                               int size);
 
     EventFullDto patchByAdmin(long eventId, UpdateEventDto updateEventDto);
 

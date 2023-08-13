@@ -18,6 +18,7 @@ public class RequestMapper {
                 .created(toLocalDateTime(request.getCreated()))
                 .event(request.getEventId())
                 .requester(request.getRequesterId())
+                .status(request.getStatus())
                 .build();
     }
 

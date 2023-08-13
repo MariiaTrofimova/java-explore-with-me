@@ -14,6 +14,7 @@ import ru.practicum.compilation.mapper.CompilationMapper;
 import ru.practicum.compilation.model.Compilation;
 import ru.practicum.compilation.repository.CompilationRepository;
 import ru.practicum.dto.ViewStatsDto;
+import ru.practicum.error.exceptions.ConflictException;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.request.repository.RequestRepository;
@@ -26,15 +27,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static ru.practicum.event.enums.EventState.PUBLISHED;
 import static ru.practicum.util.Statistics.getStartTime;
 import static ru.practicum.util.Statistics.makeUris;
+import static ru.practicum.util.Validation.validateStringField;
 
 @Service
 @Transactional
 @Slf4j
 @RequiredArgsConstructor
 public class CompilationServiceImpl implements CompilationService {
-    private static final LocalDateTime NOW = LocalDateTime.now();
 
     private final CompilationRepository repository;
     private final CategoryRepository categoryRepo;
@@ -45,8 +47,14 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CompilationDto> getAll(boolean pinned, int from, int size) {
-        List<Compilation> compilations = repository.getByParams(pinned, from, size);
+    public List<CompilationDto> getAll(Boolean pinned, int from, int size) {
+        List<Compilation> compilations;
+        if (pinned != null) {
+            compilations = repository.getByParams(pinned, from, size);
+        } else {
+            compilations = repository.getAll(from, size);
+        }
+
         if (compilations.isEmpty()) {
             return Collections.emptyList();
         }
@@ -65,8 +73,14 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     public CompilationDto add(NewCompilationDto newCompilationDto) {
         Compilation compilation = CompilationMapper.toCompilation(newCompilationDto);
-        compilation = repository.add(compilation);
-        repository.addEventsByCompId(compilation.getId(), compilation.getEvents());
+        try {
+            compilation = repository.add(compilation);
+        } catch (RuntimeException e) {
+            reportTitleUniqueConflict(e, compilation);
+        }
+        if (!newCompilationDto.getEvents().isEmpty()) {
+            repository.addEventsByCompId(compilation.getId(), compilation.getEvents());
+        }
         return makeCompilationDto(compilation);
     }
 
@@ -74,13 +88,17 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto patch(long compId, UpdateCompilationRequest updateCompilationRequest) {
         Compilation compilation = repository.findById(compId);
         updateNotNullFields(compilation, updateCompilationRequest);
+        try {
+            compilation = repository.update(compilation);
+        } catch (RuntimeException e) {
+            reportTitleUniqueConflict(e, compilation);
+        }
         List<Long> eventIds = updateCompilationRequest.getEvents();
-        if (eventIds != null) {
+        if (eventIds != null && !eventIds.isEmpty()) {
             repository.clearEventsByCompId(compId);
             repository.addEventsByCompId(compId, eventIds);
             compilation.addEvents(updateCompilationRequest.getEvents());
         }
-        compilation = repository.update(compilation);
         return makeCompilationDto(compilation);
     }
 
@@ -95,14 +113,22 @@ public class CompilationServiceImpl implements CompilationService {
             compilation.setPinned(updateCompilationRequest.getPinned());
         }
         if (updateCompilationRequest.getTitle() != null) {
+            validateStringField(updateCompilationRequest.getTitle(), "название подборки", 1, 50);
             compilation.setTitle(updateCompilationRequest.getTitle());
         }
     }
 
     private List<ViewStatsDto> makeStatRequest(List<Event> events) {
-        List<String> uris = makeUris(events);
-        LocalDateTime startStat = getStartTime(events);
-        return client.getStatistics(startStat, NOW, uris);
+        if (events.stream().noneMatch(event -> event.getEventState() == PUBLISHED)) {
+            return Collections.emptyList();
+        }
+        List<Event> eventsPublished = events.stream()
+                .filter(event -> event.getEventState() == PUBLISHED)
+                .collect(Collectors.toList());
+        List<String> uris = makeUris(eventsPublished);
+        LocalDateTime startStat = getStartTime(eventsPublished);
+        boolean unique = true;
+        return client.getStatistics(startStat.minusHours(1), LocalDateTime.now(), uris, unique);
     }
 
     private void addEventIdsToCompilation(Compilation compilation) {
@@ -111,8 +137,11 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     private void addEventIdsToCompilations(List<Compilation> compilations) {
-        Map<Long, List<Long>> eventIdsByCompIds = repository.findEventIdsByCompIds(compilations.stream()
-                .map(Compilation::getId).collect(Collectors.toList()));
+        if (compilations.isEmpty()) {
+            return;
+        }
+        List<Long> compIds = compilations.stream().map(Compilation::getId).collect(Collectors.toList());
+        Map<Long, List<Long>> eventIdsByCompIds = repository.findEventIdsByCompIds(compIds);
         compilations.forEach(compilation -> compilation.addEvents(eventIdsByCompIds.get(compilation.getId())));
     }
 
@@ -169,5 +198,16 @@ public class CompilationServiceImpl implements CompilationService {
                 .distinct()
                 .collect(Collectors.toList());
         return userRepo.findByIds(userIds);
+    }
+
+    private void reportTitleUniqueConflict(RuntimeException e, Compilation compilation) {
+        String error = e.getMessage();
+        String constraint = "uq_compilation_title";
+        if (error.contains(constraint)) {
+            error = String.format("Подборка с названием %s уже существует", compilation.getTitle());
+            log.warn("Попытка дублирования названия подборки: {}", compilation.getTitle());
+            throw new ConflictException(error);
+        }
+        throw new RuntimeException("Ошибка при передаче данных в БД");
     }
 }

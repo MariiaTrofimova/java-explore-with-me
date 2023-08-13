@@ -1,8 +1,8 @@
 package ru.practicum.event.mapper;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.practicum.category.Category;
 import ru.practicum.category.mapper.CategoryMapper;
-import ru.practicum.client.exception.StatsRequestException;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
@@ -12,6 +12,7 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.model.Location;
 import ru.practicum.user.User;
 import ru.practicum.user.mapper.UserMapper;
+import ru.practicum.util.Statistics;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 import static ru.practicum.util.DateTime.toInstant;
 import static ru.practicum.util.DateTime.toLocalDateTime;
 
+@Slf4j
 public class EventMapper {
     private static final boolean DEFAULT_AVAILABLE = true;
 
@@ -47,7 +49,7 @@ public class EventMapper {
                                               Location location,
                                               int confirmedRequests,
                                               int views) {
-        EventFullDto eventFullDto =  EventFullDto.builder()
+        EventFullDto eventFullDto = EventFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toCategoryDto(category))
@@ -62,8 +64,9 @@ public class EventMapper {
                 .requestModeration(event.isRequestModeration())
                 .title(event.getTitle())
                 .views(views)
+                .state(event.getEventState())
                 .build();
-        if(event.getPublishedOn() != null) {
+        if (event.getPublishedOn() != null) {
             eventFullDto.setPublishedOn(toLocalDateTime(event.getPublishedOn()));
         }
         return eventFullDto;
@@ -90,16 +93,6 @@ public class EventMapper {
                     viewsByEventId.get(eventId)
             );
         }).collect(Collectors.toList());
-    }
-
-    private static long getEventId(ViewStatsDto viewStatsDto) {
-        String uri = viewStatsDto.getUri();
-        try {
-            return Long.parseLong(String.valueOf(uri.charAt(uri.length() - 1)));
-        } catch (NumberFormatException e) {
-            throw new StatsRequestException("Ошибка запроса данных статистики для событий");
-        }
-
     }
 
     public static EventShortDto toEventShortDto(Event event,
@@ -146,7 +139,7 @@ public class EventMapper {
         if (viewStatsDtos.isEmpty()) {
             return viewsByEventId;
         }
-        viewStatsDtos.forEach(viewStatsDto -> viewsByEventId.put(getEventId(viewStatsDto), (int) viewStatsDto.getHits()));
+        viewStatsDtos.forEach(viewStatsDto -> viewsByEventId.put(Statistics.getEventId(viewStatsDto), (int) viewStatsDto.getHits()));
         return viewsByEventId;
     }
 

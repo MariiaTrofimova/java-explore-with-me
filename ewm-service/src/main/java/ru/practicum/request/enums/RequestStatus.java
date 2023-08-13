@@ -5,7 +5,8 @@ import java.util.Optional;
 public enum RequestStatus {
     PENDING,
     CONFIRMED,
-    REJECTED;
+    REJECTED,
+    CANCELED;
 
     public static Optional<RequestStatus> from(String stringStatus) {
         for (RequestStatus status : values()) {

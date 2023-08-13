@@ -14,6 +14,8 @@ import ru.practicum.event.repository.EventRepository;
 
 import java.util.List;
 
+import static ru.practicum.util.Validation.validateStringField;
+
 @Service
 @Transactional
 @Slf4j
@@ -42,15 +44,25 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto add(NewCategoryDto newCategoryDto) {
         Category category = CategoryMapper.toCategory(newCategoryDto);
-        category = repository.add(category);
+        try {
+            category = repository.add(category);
+        } catch (RuntimeException e) {
+            reportNameUniqueConflict(e, category);
+        }
         return CategoryMapper.toCategoryDto(category);
     }
 
     @Override
     public CategoryDto patch(long catId, NewCategoryDto newCategoryDto) {
         Category category = repository.findById(catId);
+        String newName = newCategoryDto.getName();
+        validateStringField(newName, "название категории", 1, 50);
         category.setName(newCategoryDto.getName());
-        category = repository.update(category);
+        try {
+            category = repository.update(category);
+        } catch (RuntimeException e) {
+            reportNameUniqueConflict(e, category);
+        }
         return CategoryMapper.toCategoryDto(category);
     }
 
@@ -64,5 +76,16 @@ public class CategoryServiceImpl implements CategoryService {
             throw new ConflictException(
                     String.format("С категорией с id %d связано %d событий", catId, eventsQty));
         }
+    }
+
+    private void reportNameUniqueConflict(RuntimeException e, Category category) {
+        String error = e.getMessage();
+        String constraint = "uq_category_name";
+        if (error.contains(constraint)) {
+            error = String.format("Категория с названием %s уже существует", category.getName());
+            log.warn("Попытка дублирования имени категории: {}", category.getName());
+            throw new ConflictException(error);
+        }
+        throw new RuntimeException("Ошибка при передаче данных в БД");
     }
 }

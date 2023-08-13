@@ -10,7 +10,10 @@ import java.util.List;
 @Data
 @Builder
 public class Criteria {
+    private Boolean published;
     private String text;
+    private List<Long> users;
+    private List<String> states;
     private List<Long> categories;
     private Boolean paid;
     private Instant start;
@@ -19,4 +22,6 @@ public class Criteria {
     private EventSort sort;
     private int from;
     private int size;
+
+
 }
