@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.Category;
 import ru.practicum.category.repository.CategoryRepository;
-import ru.practicum.client.StatsClient;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
 import ru.practicum.compilation.dto.UpdateCompilationRequest;
@@ -20,16 +19,13 @@ import ru.practicum.event.repository.EventRepository;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.User;
 import ru.practicum.user.repository.UserRepository;
+import ru.practicum.util.StatisticRequestService;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static ru.practicum.event.enums.EventState.PUBLISHED;
-import static ru.practicum.util.Statistics.getStartTime;
-import static ru.practicum.util.Statistics.makeUris;
 import static ru.practicum.util.Validation.validateStringField;
 
 @Service
@@ -43,7 +39,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final EventRepository eventRepo;
     private final RequestRepository requestRepo;
     private final UserRepository userRepo;
-    private final StatsClient client;
+    private final StatisticRequestService statsRequestService;
 
     @Override
     @Transactional(readOnly = true)
@@ -118,19 +114,6 @@ public class CompilationServiceImpl implements CompilationService {
         }
     }
 
-    private List<ViewStatsDto> makeStatRequest(List<Event> events) {
-        if (events.stream().noneMatch(event -> event.getEventState() == PUBLISHED)) {
-            return Collections.emptyList();
-        }
-        List<Event> eventsPublished = events.stream()
-                .filter(event -> event.getEventState() == PUBLISHED)
-                .collect(Collectors.toList());
-        List<String> uris = makeUris(eventsPublished);
-        LocalDateTime startStat = getStartTime(eventsPublished);
-        boolean unique = true;
-        return client.getStatistics(startStat.minusHours(1), LocalDateTime.now(), uris, unique);
-    }
-
     private void addEventIdsToCompilation(Compilation compilation) {
         List<Long> eventIds = repository.findEventIdsByCompId(compilation.getId());
         compilation.addEvents(eventIds);
@@ -155,7 +138,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<User> users = getUsersByEvents(events);
         Map<Long, Integer> confirmedRequestsByEventIds =
                 requestRepo.countConfirmedRequestsByEventIds(eventIds);
-        List<ViewStatsDto> viewStatsDtos = makeStatRequest(events);
+        List<ViewStatsDto> viewStatsDtos = statsRequestService.makeStatRequest(events);
 
         return CompilationMapper.toCompilationDto(compilation, events,
                 categories, users, confirmedRequestsByEventIds, viewStatsDtos);
@@ -171,7 +154,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<User> users = getUsersByEvents(events);
         Map<Long, Integer> confirmedRequestsByEventIds =
                 requestRepo.countConfirmedRequestsByEventIds(eventIds);
-        List<ViewStatsDto> viewStatsDtos = makeStatRequest(events);
+        List<ViewStatsDto> viewStatsDtos = statsRequestService.makeStatRequest(events);
         return CompilationMapper.toCompilationDto(compilations, events, categories, users,
                 confirmedRequestsByEventIds, viewStatsDtos);
     }

@@ -2,6 +2,7 @@ package ru.practicum.event.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.enums.EventSort;
@@ -11,11 +12,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static ru.practicum.error.util.ErrorMessages.FROM_ERROR_MESSAGE;
 import static ru.practicum.error.util.ErrorMessages.SIZE_ERROR_MESSAGE;
-import static ru.practicum.util.DateTime.parseEncodedDateTime;
+import static ru.practicum.util.DateTime.toInstant;
 import static ru.practicum.util.Validation.validateStartEndDates;
 
 @RestController
@@ -23,16 +25,18 @@ import static ru.practicum.util.Validation.validateStartEndDates;
 @RequiredArgsConstructor
 @Slf4j
 public class EventPublicController {
-    private static final Instant NOW = Instant.now();
-
     private final EventService service;
 
     @GetMapping
     public List<EventFullDto> getByFiltersPublic(@RequestParam(required = false) String text,
                                                  @RequestParam(required = false) List<Long> categories,
                                                  @RequestParam(required = false) Boolean paid,
-                                                 @RequestParam(required = false) String rangeStart,
-                                                 @RequestParam(required = false) String rangeEnd,
+                                                 @RequestParam(required = false, name = "rangeStart")
+                                                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                                 LocalDateTime startLocal,
+                                                 @RequestParam(required = false, name = "rangeEnd")
+                                                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                                 LocalDateTime endLocal,
                                                  @RequestParam(defaultValue = "false") boolean onlyAvailable,
                                                  @RequestParam(required = false, name = "sort") String sortParam,
                                                  @PositiveOrZero(message = FROM_ERROR_MESSAGE)
@@ -45,9 +49,9 @@ public class EventPublicController {
             sort = EventSort.from(sortParam)
                     .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + sortParam));
         }
+        Instant start = startLocal == null ? Instant.now() : toInstant(startLocal);
+        Instant end = endLocal == null ? null : toInstant(endLocal);
 
-        Instant start = rangeStart == null ? NOW : parseEncodedDateTime(rangeStart);
-        Instant end = rangeEnd == null ? null : parseEncodedDateTime(rangeEnd);
         if (end != null) {
             validateStartEndDates(start, end);
         }

@@ -58,7 +58,12 @@ public class RequestServiceImpl implements RequestService {
         } else {
             request.setStatus(RequestStatus.PENDING);
         }
-        request = repository.add(request);
+        try {
+            request = repository.add(request);
+        } catch (RuntimeException e) {
+            reportRequesterEventUniqueConflict(e, request);
+        }
+
         if (request.getStatus() == CONFIRMED && event.getParticipantLimit() != 0) {
             int confirmedRequests = repository.countConfirmedRequestsByEventId(eventId);
             if (confirmedRequests == event.getParticipantLimit()) {
@@ -173,13 +178,6 @@ public class RequestServiceImpl implements RequestService {
         if (!event.isAvailable()) {
             reportLimitConflict(eventId, event.getParticipantLimit());
         }
-        List<Long> userRequestIds = repository.findEventIdsByRequestorId(userId);
-        if (userRequestIds.contains(eventId)) {
-            log.warn("Попытка повторного запроса на участие в событии с id {} от пользователя с id {}",
-                    eventId, userId);
-            throw new ConflictException(
-                    String.format("Нельзя добавить повторный запрос событии с id %d", eventId));
-        }
         if (event.getInitiator() == userId) {
             log.warn("Попытка запроса на участие в событии с id {} от инициатора с id {}",
                     eventId, userId);
@@ -201,5 +199,17 @@ public class RequestServiceImpl implements RequestService {
         throw new ConflictException(
                 String.format("У события с id  %d достигнут лимит запросов на участие %d",
                         eventId, participantLimit));
+    }
+
+    private void reportRequesterEventUniqueConflict(RuntimeException e, Request request) {
+        String error = e.getMessage();
+        String constraint = "uq_requester_id_by_event_id";
+        if (error.contains(constraint)) {
+            error = String.format("Нельзя добавить повторный запрос на участие событии с id %d", request.getEventId());
+            log.warn("Попытка повторного запроса на участие в событии с id {} от пользователя с id {}",
+                    request.getEventId(), request.getRequesterId());
+            throw new ConflictException(error);
+        }
+        throw new RuntimeException("Ошибка при передаче данных в БД");
     }
 }

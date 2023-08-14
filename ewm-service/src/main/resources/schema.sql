@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS requests
     status       VARCHAR(9),
 
     CONSTRAINT fk_requests_to_events FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
-    CONSTRAINT fk_requests_to_users FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_requests_to_users FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT UQ_REQUESTER_ID_BY_EVENT_ID UNIQUE (requester_id, event_id)
 );
 
 CREATE TABLE IF NOT EXISTS compilations

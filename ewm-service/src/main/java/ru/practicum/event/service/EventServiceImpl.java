@@ -30,6 +30,7 @@ import ru.practicum.event.repository.LocationRepository;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.User;
 import ru.practicum.user.repository.UserRepository;
+import ru.practicum.util.StatisticRequestService;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -40,7 +41,7 @@ import java.util.stream.Collectors;
 
 import static ru.practicum.event.enums.EventState.PUBLISHED;
 import static ru.practicum.util.DateTime.toInstant;
-import static ru.practicum.util.Statistics.*;
+import static ru.practicum.util.Statistics.getEventId;
 import static ru.practicum.util.Validation.*;
 
 @Service
@@ -57,6 +58,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepo;
     private final LocationRepository locationRepo;
     private final StatsClient client;
+    private final StatisticRequestService statsRequestService;
 
     @Override
     public List<EventFullDto> getAllByCriteriaByAdmin(List<Long> users,
@@ -126,6 +128,7 @@ public class EventServiceImpl implements EventService {
                 .build();
         List<Event> events = repository.getByCriteria(criteria);
         addEndHitPoint(URI, ip);
+        events.forEach(event -> addEndHitPoint(URI + "/" + event.getId(), ip));
         return makeFullResponseDtoList(events);
     }
 
@@ -133,7 +136,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getByIdPublic(long id, String ip) {
         Event event = repository.findById(id);
         if (event.getEventState() != PUBLISHED) {
-            log.warn("Попытка просмотра неопубликованного события с id {} незарегистрированным пользователем с ip {}",
+            log.warn("Попытка просмотра неопубликованного события с id {} пользователем с ip {}",
                     id, ip);
             throw new NotFoundException(String.format("Событие с id %d еще не опубликовано", id));
         }
@@ -277,7 +280,7 @@ public class EventServiceImpl implements EventService {
         int confirmedRequests = requestRepo.countConfirmedRequestsByEventId(event.getId());
         int views = 0;
         if (event.getEventState() == PUBLISHED) {
-            List<ViewStatsDto> viewStatsDto = makeStatRequest(List.of(event));
+            List<ViewStatsDto> viewStatsDto = statsRequestService.makeStatRequest(List.of(event));
             if (!viewStatsDto.isEmpty()) {
                 long eventId = getEventId(viewStatsDto.get(0));
                 if (event.getId() != eventId) {
@@ -305,7 +308,7 @@ public class EventServiceImpl implements EventService {
         List<Location> locations = findLocationsByEvents(events);
         Map<Long, Integer> confirmedRequestsByEventId = requestRepo.countConfirmedRequestsByEventIds(eventIds);
 
-        List<ViewStatsDto> viewStatsDtos = makeStatRequest(events);
+        List<ViewStatsDto> viewStatsDtos = statsRequestService.makeStatRequest(events);
 
         return EventMapper.toEventFullDtoList(events, categories, users, locations,
                 confirmedRequestsByEventId, viewStatsDtos);
@@ -324,20 +327,6 @@ public class EventServiceImpl implements EventService {
     private List<Category> findCategoriesByEvents(List<Event> events) {
         List<Long> categoryIds = events.stream().map(Event::getCategoryId).distinct().collect(Collectors.toList());
         return categoryRepo.findByIds(categoryIds);
-    }
-
-
-    private List<ViewStatsDto> makeStatRequest(List<Event> events) {
-        if (events.stream().noneMatch(event -> event.getEventState() == PUBLISHED)) {
-            return Collections.emptyList();
-        }
-        List<Event> eventsPublished = events.stream()
-                .filter(event -> event.getEventState() == PUBLISHED)
-                .collect(Collectors.toList());
-        List<String> uris = makeUris(eventsPublished);
-        LocalDateTime startStat = getStartTime(eventsPublished);
-        boolean unique = true;
-        return client.getStatistics(startStat.minusHours(1), LocalDateTime.now(), uris, unique);
     }
 
     private void addEndHitPoint(String uri, String ip) {

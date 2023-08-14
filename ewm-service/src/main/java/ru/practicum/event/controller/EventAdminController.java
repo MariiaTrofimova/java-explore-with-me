@@ -2,6 +2,7 @@ package ru.practicum.event.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventFullDto;
@@ -12,11 +13,12 @@ import ru.practicum.event.service.EventService;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static ru.practicum.error.util.ErrorMessages.FROM_ERROR_MESSAGE;
 import static ru.practicum.error.util.ErrorMessages.SIZE_ERROR_MESSAGE;
-import static ru.practicum.util.DateTime.parseEncodedDateTime;
+import static ru.practicum.util.DateTime.toInstant;
 import static ru.practicum.util.Validation.validateStartEndDates;
 
 @RestController
@@ -31,8 +33,12 @@ public class EventAdminController {
     public List<EventFullDto> getAll(@RequestParam(required = false) List<Long> users,
                                      @RequestParam(required = false) List<String> states,
                                      @RequestParam(required = false) List<Long> categories,
-                                     @RequestParam(required = false) String rangeStart,
-                                     @RequestParam(required = false) String rangeEnd,
+                                     @RequestParam(required = false, name = "rangeStart")
+                                     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                     LocalDateTime startLocal,
+                                     @RequestParam(required = false, name = "rangeEnd")
+                                     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                     LocalDateTime endLocal,
                                      @PositiveOrZero(message = FROM_ERROR_MESSAGE)
                                      @RequestParam(defaultValue = "0") Integer from,
                                      @Positive(message = SIZE_ERROR_MESSAGE)
@@ -42,8 +48,8 @@ public class EventAdminController {
             states.forEach(stateParam -> EventState.from(stateParam)
                     .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + stateParam)));
         }
-        Instant start = rangeStart == null ? null : parseEncodedDateTime(rangeStart);
-        Instant end = rangeEnd == null ? null : parseEncodedDateTime(rangeEnd);
+        Instant start = startLocal == null ? null : toInstant(startLocal);
+        Instant end = endLocal == null ? null : toInstant(endLocal);
         if (start != null && end != null) {
             validateStartEndDates(start, end);
         }

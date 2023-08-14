@@ -42,6 +42,5 @@ public class Statistics {
         } catch (NumberFormatException e) {
             throw new StatsRequestException("Ошибка запроса данных статистики");
         }
-
     }
 }

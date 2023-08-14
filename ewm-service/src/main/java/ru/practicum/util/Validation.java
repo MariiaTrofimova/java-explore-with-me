@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 public class Validation {
-    private static final LocalDateTime NOW = LocalDateTime.now();
 
     public static void validateStringField(String field, String fieldName, int min, int max) {
         if (field.isBlank()) {
@@ -30,7 +29,7 @@ public class Validation {
     }
 
     public static void validateEventDate(LocalDateTime eventDateToUpdate) {
-        if (!eventDateToUpdate.isAfter(NOW)) {
+        if (!eventDateToUpdate.isAfter(LocalDateTime.now())) {
             throw new ValidationException("Поле eventDate должно содержать дату, которая еще не наступила");
         }
     }
