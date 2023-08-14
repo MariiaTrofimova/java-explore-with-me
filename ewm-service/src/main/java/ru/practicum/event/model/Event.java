@@ -26,7 +26,6 @@ public class Event {
     private Instant createdOn;
     private Instant publishedOn;
     private EventState eventState;
-    private boolean available;
 
     public Map<String, Object> toMap() {
         Map<String, Object> map = new HashMap<>();
@@ -41,7 +40,6 @@ public class Event {
         map.put("title", title);
         map.put("initiator", initiator);
         map.put("state", eventState.toString());
-        map.put("available", available);
         return map;
     }
 }

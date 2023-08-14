@@ -70,10 +70,6 @@ public class EventRepositoryImpl implements EventRepository {
             parameters.addValue("end", Timestamp.from(criteria.getEnd()));
         }
 
-        if (criteria.isOnlyAvailable()) {
-            conditions.add("available = true");
-        }
-
         if (criteria.getUsers() != null) {
             conditions.add("initiator in (:initiators)");
             parameters.addValue("initiators", criteria.getUsers());
@@ -179,14 +175,6 @@ public class EventRepositoryImpl implements EventRepository {
         return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToEvent(rs));
     }
 
-    @Override
-    public void setAvailable(long eventId, boolean available) {
-        String sql = "update events set available = :available where id = :id";
-        MapSqlParameterSource parameters = new MapSqlParameterSource("id", eventId);
-        parameters.addValue("available", available);
-        namedJdbcTemplate.update(sql, parameters);
-    }
-
     private MapSqlParameterSource makeParameterMap(Event event) {
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("id", event.getId());
@@ -223,7 +211,6 @@ public class EventRepositoryImpl implements EventRepository {
         Instant createdOn = rs.getTimestamp("created_on").toInstant();
         EventState eventState = EventState.from(rs.getString("state"))
                 .orElseThrow(() -> new ConflictException("В базу попало что-то не то"));
-        boolean available = rs.getBoolean("available");
 
         Event event = Event.builder()
                 .id(id)
@@ -239,7 +226,6 @@ public class EventRepositoryImpl implements EventRepository {
                 .initiator(initiator)
                 .createdOn(createdOn)
                 .eventState(eventState)
-                .available(available)
                 .build();
 
         if (eventState == EventState.PUBLISHED) {

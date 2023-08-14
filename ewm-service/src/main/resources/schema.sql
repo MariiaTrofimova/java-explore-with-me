@@ -39,7 +39,6 @@ CREATE TABLE IF NOT EXISTS events
     created_on         TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     published_on       TIMESTAMP WITHOUT TIME ZONE default NULL,
     state              VARCHAR(9)                  NOT NULL,
-    available          BOOLEAN                     NOT NULL,
 
     CONSTRAINT fk_events_to_categories FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE,
     CONSTRAINT fk_events_to_locations FOREIGN KEY (location_id) REFERENCES locations (id) ON DELETE CASCADE,

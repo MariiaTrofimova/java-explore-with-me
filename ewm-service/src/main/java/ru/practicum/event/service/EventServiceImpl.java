@@ -120,7 +120,6 @@ public class EventServiceImpl implements EventService {
                 .paid(paid)
                 .start(start)
                 .end(end)
-                .onlyAvailable(onlyAvailable)
                 .sort(sort)
                 .from(from)
                 .size(size)
@@ -128,6 +127,13 @@ public class EventServiceImpl implements EventService {
                 .build();
         List<Event> events = repository.getByCriteria(criteria);
         addEndHitPoint(URI, ip);
+        if (onlyAvailable) {
+            List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+            Map<Long, Integer> confirmedRequestsQty = requestRepo.countConfirmedRequestsByEventIds(eventIds);
+            events = events.stream()
+                    .filter(event -> confirmedRequestsQty.get(event.getId()) < event.getParticipantLimit())
+                    .collect(Collectors.toList());
+        }
         events.forEach(event -> addEndHitPoint(URI + "/" + event.getId(), ip));
         return makeFullResponseDtoList(events);
     }

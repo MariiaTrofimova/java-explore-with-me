@@ -20,6 +20,4 @@ public interface EventRepository {
     long countEventsByCategoryId(long catId);
 
     List<Event> finByIds(List<Long> eventIds);
-
-    void setAvailable(long eventId, boolean available);
 }

@@ -53,7 +53,9 @@ public class RequestServiceImpl implements RequestService {
                 .requesterId(userId)
                 .eventId(eventId)
                 .build();
-        if (!event.isRequestModeration() && event.isAvailable() || event.getParticipantLimit() == 0) {
+        int confirmedRequests = repository.countConfirmedRequestsByEventId(eventId);
+        int limit = event.getParticipantLimit();
+        if (!event.isRequestModeration() && (confirmedRequests < limit) || limit == 0) {
             request.setStatus(CONFIRMED);
         } else {
             request.setStatus(RequestStatus.PENDING);
@@ -62,13 +64,6 @@ public class RequestServiceImpl implements RequestService {
             request = repository.add(request);
         } catch (RuntimeException e) {
             reportRequesterEventUniqueConflict(e, request);
-        }
-
-        if (request.getStatus() == CONFIRMED && event.getParticipantLimit() != 0) {
-            int confirmedRequests = repository.countConfirmedRequestsByEventId(eventId);
-            if (confirmedRequests == event.getParticipantLimit()) {
-                eventRepo.setAvailable(eventId, false);
-            }
         }
         return RequestMapper.toParticipationRequestDto(request);
     }
@@ -81,9 +76,6 @@ public class RequestServiceImpl implements RequestService {
             throw new NotFoundException(
                     String.format("Редактирование запроса с id %d недоступно для пользователя с id %d",
                             requestId, userId));
-        }
-        if (request.getStatus() == CONFIRMED) {
-            eventRepo.setAvailable(request.getEventId(), true);
         }
         repository.cancel(requestId);
         request.setStatus(CANCELED);
@@ -134,22 +126,20 @@ public class RequestServiceImpl implements RequestService {
         });
 
         if (newStatus == CONFIRMED) {
-            if (!event.isAvailable()) {
+            int confirmedBeforeRequestsQty = repository.countConfirmedRequestsByEventId(eventId);
+            if (confirmedBeforeRequestsQty >= event.getParticipantLimit()) {
                 reportLimitConflict(eventId, participantLimit);
             }
 
             List<Request> confirmedRequests;
             List<Request> rejectedRequests = new ArrayList<>();
-            int confirmedBeforeRequestsQty = repository.countConfirmedRequestsByEventId(eventId);
+
             int requestsQty = requestsToUpdate.size();
             int freeQtyToConfirm = participantLimit - confirmedBeforeRequestsQty;
 
             if (freeQtyToConfirm >= requestsQty) {
                 requestsToUpdate.forEach(request -> request.setStatus(CONFIRMED));
                 confirmedRequests = requestsToUpdate;
-                if (freeQtyToConfirm == requestsQty) {
-                    eventRepo.setAvailable(eventId, false);
-                }
                 repository.updateStatuses(requestIds, CONFIRMED);
             } else {
                 IntStream.range(0, freeQtyToConfirm).forEach(i -> requestsToUpdate.get(i).setStatus(CONFIRMED));
@@ -175,7 +165,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private void validateRequest(Event event, long eventId, long userId) {
-        if (!event.isAvailable()) {
+        int confirmedRequests = repository.countConfirmedRequestsByEventId(eventId);
+        int limit = event.getParticipantLimit();
+        if (limit != 0 && confirmedRequests >= limit) {
             reportLimitConflict(eventId, event.getParticipantLimit());
         }
         if (event.getInitiator() == userId) {

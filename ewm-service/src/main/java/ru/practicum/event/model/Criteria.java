@@ -18,7 +18,6 @@ public class Criteria {
     private Boolean paid;
     private Instant start;
     private Instant end;
-    private boolean onlyAvailable;
     private EventSort sort;
     private int from;
     private int size;

@@ -24,7 +24,6 @@ import static ru.practicum.util.DateTime.toLocalDateTime;
 
 @Slf4j
 public class EventMapper {
-    private static final boolean DEFAULT_AVAILABLE = true;
 
     public static Event toEvent(NewEventDto newEventDto, long locationId, long userId) {
         return Event.builder()
@@ -39,7 +38,6 @@ public class EventMapper {
                 .title(newEventDto.getTitle())
                 .initiator(userId)
                 .eventState(EventState.PENDING)
-                .available(DEFAULT_AVAILABLE)
                 .build();
     }
 
