@@ -1,4 +1,4 @@
-package ru.practicum;
+package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,8 +23,8 @@ public class StatsController {
     @GetMapping("/stats")
     public List<ViewStatsDto> getStat(@RequestParam String start,
                                       @RequestParam String end,
-                                      @RequestParam(required = false, defaultValue = "") List<String> uris,
-                                      @RequestParam(required = false, defaultValue = "false") boolean unique) {
+                                      @RequestParam(defaultValue = "") List<String> uris,
+                                      @RequestParam(defaultValue = "false") boolean unique) {
         return service.getStats(start, end, uris, unique);
     }
 }

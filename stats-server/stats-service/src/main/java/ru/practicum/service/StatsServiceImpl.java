@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static ru.practicum.util.DateTime.decodeDateTime;
-import static ru.practicum.util.DateTime.parseDateTime;
+import static ru.practicum.util.DateTime.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -62,7 +61,7 @@ public class StatsServiceImpl implements StatsService {
 
         Instant start = parseDateTime(startDecoded);
         Instant end = parseDateTime(endDecoded);
-
+        validateStartEndDates(start, end);
         Map<Long, Long> viewsByAppId;
         List<App> apps;
         List<Long> appIds;
