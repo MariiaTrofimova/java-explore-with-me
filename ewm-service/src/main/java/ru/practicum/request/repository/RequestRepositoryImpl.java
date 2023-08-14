@@ -35,8 +35,8 @@ public class RequestRepositoryImpl implements RequestRepository {
     public Map<Long, Integer> countConfirmedRequestsByEventIds(List<Long> eventIds) {
         String sql = "select event_id, COUNT(id) as requests_qty from requests " +
                 "where status = 'CONFIRMED' group by event_id";
-        Map<Long, Integer> confirmedRequestsByEventIds = eventIds.stream().
-                collect(Collectors.toMap(Function.identity(), eventId -> 0));
+        Map<Long, Integer> confirmedRequestsByEventIds = eventIds.stream()
+                .collect(Collectors.toMap(Function.identity(), eventId -> 0));
         MapSqlParameterSource parameters = new MapSqlParameterSource("eventIds", eventIds);
         namedJdbcTemplate.query(sql, parameters,
                 rs -> {

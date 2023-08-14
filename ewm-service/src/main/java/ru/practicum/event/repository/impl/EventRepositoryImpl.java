@@ -102,31 +102,6 @@ public class EventRepositoryImpl implements EventRepository {
     }
 
     @Override
-    public List<Event> getByFilters(List<Long> initiatorIds,
-                                    List<String> states,
-                                    List<Long> categories,
-                                    Instant start,
-                                    Instant end,
-                                    int from,
-                                    int size) {
-        String sql = "select * from events where initiator in (:initiatorIds) " +
-                "AND state in (:states) " +
-                "AND category_id in (:categories) " +
-                "AND (event_date between :start and :end) " +
-                "order by id " +
-                "limit :size offset :from";
-        MapSqlParameterSource parameters = new MapSqlParameterSource("initiatorIds", initiatorIds);
-        parameters.addValue("states", states);
-        parameters.addValue("categories", categories);
-        parameters.addValue("start", Timestamp.from(start));
-        parameters.addValue("end", Timestamp.from(end));
-        parameters.addValue("size", size);
-        parameters.addValue("from", from);
-
-        return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToEvent(rs));
-    }
-
-    @Override
     public List<Event> findByInitiatorId(long userId, int from, int size) {
         String sql = "select * from events where initiator = :userId " +
                 "order by id limit :size offset :from";
