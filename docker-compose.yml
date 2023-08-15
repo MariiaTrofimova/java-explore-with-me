@@ -34,7 +34,7 @@ services:
     depends_on:
       - ewm-db
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5431/ewm
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
       - POSTGRES_USER=mariia
       - POSTGRES_PASSWORD=password
 
@@ -44,7 +44,7 @@ services:
     volumes:
       - /var/lib/postgresql/data/
     ports:
-      - "6542:5431"
+      - "6540:5432"
     environment:
       - POSTGRES_DB=ewm
       - POSTGRES_USER=mariia

@@ -1,5 +1,6 @@
 package ru.practicum.util;
 
+import javax.validation.ValidationException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -28,5 +29,11 @@ public class DateTime {
 
     public static Instant toInstant(LocalDateTime localDateTime) {
         return localDateTime.toInstant(ZONE_OFFSET);
+    }
+
+    public static void validateStartEndDates(Instant start, Instant end) {
+        if (!end.isAfter(start)) {
+            throw new ValidationException("Дата окончания диапазона должна быть позже даты начала");
+        }
     }
 }
