@@ -13,7 +13,6 @@ import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.error.exceptions.ConflictException;
 import ru.practicum.error.exceptions.NotFoundException;
 import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.LocationDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventDto;
 import ru.practicum.event.enums.EventSort;
@@ -21,12 +20,13 @@ import ru.practicum.event.enums.EventState;
 import ru.practicum.event.enums.StateActionAdmin;
 import ru.practicum.event.enums.StateActionPrivate;
 import ru.practicum.event.mapper.EventMapper;
-import ru.practicum.event.mapper.LocationMapper;
 import ru.practicum.event.model.Criteria;
 import ru.practicum.event.model.Event;
-import ru.practicum.event.model.Location;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.event.repository.LocationRepository;
+import ru.practicum.location.dto.LocationDto;
+import ru.practicum.location.mapper.LocationMapper;
+import ru.practicum.location.model.Location;
+import ru.practicum.location.repository.LocationRepository;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.User;
 import ru.practicum.user.repository.UserRepository;
@@ -178,10 +178,10 @@ public class EventServiceImpl implements EventService {
     }
 
     private long setIdToLocation(Location location) {
-        List<Location> locations = locationRepo.findByLatAndLon(location);
+        List<Location> locations = locationRepo.findNearestByLatAndLon(location);
         long locationId;
         if (locations.isEmpty()) {
-            locationId = locationRepo.add(location);
+            locationId = locationRepo.addByUser(location);
         } else {
             locationId = locations.get(0).getId();
         }

@@ -41,7 +41,6 @@ public class EventRepositoryImpl implements EventRepository {
         List<String> conditions = new ArrayList<>();
         MapSqlParameterSource parameters = new MapSqlParameterSource();
 
-
         if (criteria.getPublished() != null) {
             conditions.add("state = 'PUBLISHED'");
         }
@@ -173,6 +172,15 @@ public class EventRepositoryImpl implements EventRepository {
         String sql = "select * from events where id in (:ids)";
         MapSqlParameterSource parameters = new MapSqlParameterSource("ids", ids);
         return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToEvent(rs));
+    }
+
+    @Override
+    public long countEventsByLocationId(long locId) {
+        String sql = "select COUNT(id) as countEventsByLoc " +
+                "from events where location_id = :locId";
+        MapSqlParameterSource parameters = new MapSqlParameterSource("locId", locId);
+        Long countEventsByLocId = namedJdbcTemplate.queryForObject(sql, parameters, Long.class);
+        return countEventsByLocId == null ? 0 : countEventsByLocId;
     }
 
     private MapSqlParameterSource makeParameterMap(Event event) {

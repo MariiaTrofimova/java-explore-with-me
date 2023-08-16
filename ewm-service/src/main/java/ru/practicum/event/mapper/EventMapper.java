@@ -9,7 +9,8 @@ import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.enums.EventState;
 import ru.practicum.event.model.Event;
-import ru.practicum.event.model.Location;
+import ru.practicum.location.mapper.LocationMapper;
+import ru.practicum.location.model.Location;
 import ru.practicum.user.User;
 import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.util.Statistics;
@@ -56,7 +57,7 @@ public class EventMapper {
                 .description(event.getDescription())
                 .eventDate(toLocalDateTime(event.getEventDate()))
                 .initiator(UserMapper.toUserShortDto(user))
-                .location(LocationMapper.locationDto(location))
+                .location(LocationMapper.toLocationDto(location))
                 .paid(event.isPaid())
                 .participantLimit(event.getParticipantLimit())
                 .requestModeration(event.isRequestModeration())

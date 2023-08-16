@@ -20,4 +20,6 @@ public interface EventRepository {
     long countEventsByCategoryId(long catId);
 
     List<Event> finByIds(List<Long> eventIds);
+
+    long countEventsByLocationId(long locId);
 }
