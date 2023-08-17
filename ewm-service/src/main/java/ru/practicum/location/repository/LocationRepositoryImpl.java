@@ -11,10 +11,10 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.practicum.error.exceptions.ConflictException;
 import ru.practicum.error.exceptions.NotFoundException;
-import ru.practicum.location.dto.SearchAreaDto;
 import ru.practicum.location.enums.LocationType;
 import ru.practicum.location.model.Location;
 import ru.practicum.location.model.LocationCriteria;
+import ru.practicum.location.model.SearchArea;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -81,7 +81,7 @@ public class LocationRepositoryImpl implements LocationRepository {
         MapSqlParameterSource parameters = new MapSqlParameterSource();
 
         if (criteria.getSearchArea() != null) {
-            SearchAreaDto searchArea = criteria.getSearchArea();
+            SearchArea searchArea = criteria.getSearchArea();
             conditions.add("distance(:lat, :lon, lat, lon) <= radius + :radius");
             parameters.addValue("lat", searchArea.getLat());
             parameters.addValue("lon", searchArea.getLon());

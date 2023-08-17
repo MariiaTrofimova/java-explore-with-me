@@ -6,10 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.location.dto.LocationFullDto;
-import ru.practicum.location.dto.SearchAreaDto;
+import ru.practicum.location.dto.NewLocationDto;
 import ru.practicum.location.enums.LocationType;
 import ru.practicum.location.service.LocationService;
-import ru.practicum.util.ValidationGroups.Create;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -28,7 +27,12 @@ public class LocationAdminController {
     private final LocationService service;
 
     @GetMapping
-    public List<LocationFullDto> getAll(@RequestParam(required = false) @Valid SearchAreaDto searchArea,
+    public List<LocationFullDto> getAll(@PositiveOrZero(message = "Широта не может быть отрицательной")
+                                        @RequestParam(required = false) Float lat,
+                                        @PositiveOrZero(message = "Долгота не может быть отрицательной")
+                                        @RequestParam(required = false) Float lon,
+                                        @PositiveOrZero(message = "Радиус поиска должен быть положительным")
+                                        @RequestParam(required = false) Integer radius,
                                         @RequestParam(required = false, name = "type") String type,
                                         @PositiveOrZero(message = FROM_ERROR_MESSAGE)
                                         @RequestParam(defaultValue = "0") Integer from,
@@ -38,14 +42,13 @@ public class LocationAdminController {
             LocationType.from(type).orElseThrow(() ->
                     new IllegalArgumentException("Unknown state: " + type));
         }
-        return service.getAllByLocationCriteria(searchArea, type, from, size);
+        return service.getAllByLocationCriteria(lat, lon, radius, type, from, size);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Validated(Create.class)
-    public LocationFullDto add(@Valid @RequestBody LocationFullDto locationFullDto) {
-        return service.add(locationFullDto);
+    public LocationFullDto add(@Valid @RequestBody NewLocationDto newLocationDto) {
+        return service.add(newLocationDto);
     }
 
     @PatchMapping("/{locId}")

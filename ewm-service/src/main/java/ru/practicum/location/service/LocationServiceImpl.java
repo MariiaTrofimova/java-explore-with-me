@@ -6,11 +6,12 @@ import org.springframework.stereotype.Service;
 import ru.practicum.error.exceptions.ConflictException;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.location.dto.LocationFullDto;
-import ru.practicum.location.dto.SearchAreaDto;
+import ru.practicum.location.dto.NewLocationDto;
 import ru.practicum.location.enums.LocationType;
 import ru.practicum.location.mapper.LocationMapper;
 import ru.practicum.location.model.Location;
 import ru.practicum.location.model.LocationCriteria;
+import ru.practicum.location.model.SearchArea;
 import ru.practicum.location.repository.LocationRepository;
 
 import java.util.Collections;
@@ -27,8 +28,8 @@ public class LocationServiceImpl implements LocationService {
 
 
     @Override
-    public LocationFullDto add(LocationFullDto locationFullDto) {
-        Location location = LocationMapper.toLocation(locationFullDto);
+    public LocationFullDto add(NewLocationDto newLocationDto) {
+        Location location = LocationMapper.toLocation(newLocationDto);
         try {
             long id = repository.add(location);
             location.setId(id);
@@ -44,6 +45,35 @@ public class LocationServiceImpl implements LocationService {
         updateNotNullFields(location, locationFullDto);
         location = repository.update(location);
         return LocationMapper.toLocationFullDto(location);
+    }
+
+    @Override
+    public void delete(long locId) {
+        //с локацией не должно быть связано ни одного события.
+        long eventsQty = eventRepo.countEventsByLocationId(locId);
+        if (eventsQty == 0) {
+            repository.delete(locId);
+        } else {
+            throw new ConflictException(
+                    String.format("С локацией с id %d связано %d событий", locId, eventsQty));
+        }
+    }
+
+    @Override
+    public List<LocationFullDto> getAllByLocationCriteria(Float lat, Float lon, Integer radius, String type,
+                                                          int from, int size) {
+        SearchArea searchArea = makeSearchArea(lat, lon, radius);
+        LocationCriteria criteria = LocationCriteria.builder()
+                .searchArea(searchArea)
+                .type(type)
+                .from(from)
+                .size(size)
+                .build();
+        List<Location> locations = repository.getByCriteria(criteria);
+        if (locations.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return LocationMapper.toLocationFullDto(locations);
     }
 
     private void updateNotNullFields(Location location, LocationFullDto locationFullDto) {
@@ -62,6 +92,7 @@ public class LocationServiceImpl implements LocationService {
             location.setRadius(radius);
         }
         if (type != null) {
+            validateStringField(type, "Тип локации", 1, 12);
             LocationType newType = LocationType.from(locationFullDto.getType())
                     .orElseThrow(() -> new IllegalArgumentException("Unknown type: " + locationFullDto.getType()));
             location.setType(newType);
@@ -72,32 +103,18 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
-    @Override
-    public void delete(long locId) {
-        //с локацией не должно быть связано ни одного события.
-        long eventsQty = eventRepo.countEventsByLocationId(locId);
-        if (eventsQty == 0) {
-            repository.delete(locId);
-        } else {
-            throw new ConflictException(
-                    String.format("С локацией с id %d связано %d событий", locId, eventsQty));
+    private SearchArea makeSearchArea(Float lat, Float lon, Integer radius) {
+        SearchArea searchArea = null;
+        if (lat != null && lon != null && radius != null) {
+            searchArea = SearchArea.builder()
+                    .lat(lat)
+                    .lon(lon)
+                    .radius(radius)
+                    .build();
+        } else if (lat != null || lon != null || radius != null) {
+            throw new IllegalArgumentException("Область поиска должна быть задана тремя параметрами: lat, lon, radius");
         }
-    }
-
-    @Override
-    public List<LocationFullDto> getAllByLocationCriteria(SearchAreaDto searchArea, String type,
-                                                          int from, int size) {
-        LocationCriteria criteria = LocationCriteria.builder()
-                .searchArea(searchArea)
-                .type(type)
-                .from(from)
-                .size(size)
-                .build();
-        List<Location> locations = repository.getByCriteria(criteria);
-        if (locations.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return LocationMapper.toLocationFullDto(locations);
+        return searchArea;
     }
 
     private void reportLatLonUniqueConflict(RuntimeException e, Location location) {

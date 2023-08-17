@@ -2,6 +2,7 @@ package ru.practicum.location.mapper;
 
 import ru.practicum.location.dto.LocationDto;
 import ru.practicum.location.dto.LocationFullDto;
+import ru.practicum.location.dto.NewLocationDto;
 import ru.practicum.location.enums.LocationType;
 import ru.practicum.location.model.Location;
 
@@ -38,14 +39,14 @@ public class LocationMapper {
         return locations.stream().map(LocationMapper::toLocationFullDto).collect(Collectors.toList());
     }
 
-    public static Location toLocation(LocationFullDto locationFullDto) {
-        LocationType type = LocationType.from(locationFullDto.getType())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown type: " + locationFullDto.getType()));
+    public static Location toLocation(NewLocationDto newLocationDto) {
+        LocationType type = LocationType.from(newLocationDto.getType())
+                .orElseThrow(() -> new IllegalArgumentException("Unknown type: " + newLocationDto.getType()));
         return Location.builder()
-                .lat(locationFullDto.getLat())
-                .lon(locationFullDto.getLon())
-                .radius(locationFullDto.getRadius())
-                .name(locationFullDto.getName())
+                .lat(newLocationDto.getLat())
+                .lon(newLocationDto.getLon())
+                .radius(newLocationDto.getRadius())
+                .name(newLocationDto.getName())
                 .type(type)
                 .build();
     }
