@@ -26,6 +26,8 @@ import ru.practicum.event.repository.EventRepository;
 import ru.practicum.location.dto.LocationDto;
 import ru.practicum.location.mapper.LocationMapper;
 import ru.practicum.location.model.Location;
+import ru.practicum.location.model.LocationCriteria;
+import ru.practicum.location.model.SearchArea;
 import ru.practicum.location.repository.LocationRepository;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.User;
@@ -43,6 +45,7 @@ import java.util.stream.Collectors;
 
 import static ru.practicum.event.enums.EventState.PUBLISHED;
 import static ru.practicum.util.DateTime.toInstant;
+import static ru.practicum.util.LocationSearch.makeSearchArea;
 import static ru.practicum.util.Statistics.getEventId;
 import static ru.practicum.util.Statistics.makeViewMap;
 import static ru.practicum.util.Validation.*;
@@ -69,12 +72,14 @@ public class EventServiceImpl implements EventService {
                                                       List<Long> categoryIds,
                                                       Instant start,
                                                       Instant end,
-                                                      Long locId,
+                                                      Float lat,
+                                                      Float lon,
+                                                      Integer radius,
                                                       int from,
                                                       int size) {
-        Location location = null;
-        if (locId != null) {
-            location = locationRepo.findById(locId);
+        List<Long> locationIds = null;
+        if (lat != null || lon != null || radius != null) {
+            locationIds = getLocationIdsInArea(lat, lon, radius);
         }
         Criteria criteria = Criteria.builder()
                 .users(users)
@@ -82,7 +87,7 @@ public class EventServiceImpl implements EventService {
                 .categories(categoryIds)
                 .start(start)
                 .end(end)
-                .location(location)
+                .locationIds(locationIds)
                 .from(from)
                 .size(size)
                 .build();
@@ -217,6 +222,16 @@ public class EventServiceImpl implements EventService {
         }
         event = repository.update(event);
         return makeFullResponseDto(event);
+    }
+
+    private List<Long> getLocationIdsInArea(Float lat, Float lon, Integer radius) {
+        SearchArea searchArea = makeSearchArea(lat, lon, radius);
+        LocationCriteria locationCriteria = LocationCriteria.builder()
+                .searchArea(searchArea)
+                .build();
+        return locationRepo.getByCriteria(locationCriteria).stream()
+                .map(Location::getId)
+                .collect(Collectors.toList());
     }
 
     private void setEventStateByPrivateAction(Event event, String stateAction) {

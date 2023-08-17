@@ -14,7 +14,10 @@ public interface EventService {
                                                List<Long> categories,
                                                Instant start,
                                                Instant end,
-                                               Long locId, int from,
+                                               Float lat,
+                                               Float lon,
+                                               Integer radius,
+                                               int from,
                                                int size);
 
     EventFullDto patchByAdmin(long eventId, UpdateEventDto updateEventDto);

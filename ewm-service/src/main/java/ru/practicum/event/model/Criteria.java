@@ -3,7 +3,6 @@ package ru.practicum.event.model;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.event.enums.EventSort;
-import ru.practicum.location.model.Location;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,7 +19,7 @@ public class Criteria {
     private Instant start;
     private Instant end;
     private EventSort sort;
-    private Location location;
+    private List<Long> locationIds;
     private int from;
     private int size;
 

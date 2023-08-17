@@ -17,6 +17,7 @@ import ru.practicum.location.repository.LocationRepository;
 import java.util.Collections;
 import java.util.List;
 
+import static ru.practicum.util.LocationSearch.makeSearchArea;
 import static ru.practicum.util.Validation.validateStringField;
 
 @Service
@@ -101,20 +102,6 @@ public class LocationServiceImpl implements LocationService {
             validateStringField(name, "Название локации", 1, 50);
             location.setName(name);
         }
-    }
-
-    private SearchArea makeSearchArea(Float lat, Float lon, Integer radius) {
-        SearchArea searchArea = null;
-        if (lat != null && lon != null && radius != null) {
-            searchArea = SearchArea.builder()
-                    .lat(lat)
-                    .lon(lon)
-                    .radius(radius)
-                    .build();
-        } else if (lat != null || lon != null || radius != null) {
-            throw new IllegalArgumentException("Область поиска должна быть задана тремя параметрами: lat, lon, radius");
-        }
-        return searchArea;
     }
 
     private void reportLatLonUniqueConflict(RuntimeException e, Location location) {

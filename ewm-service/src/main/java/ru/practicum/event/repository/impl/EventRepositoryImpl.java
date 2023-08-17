@@ -16,7 +16,6 @@ import ru.practicum.event.enums.EventState;
 import ru.practicum.event.model.Criteria;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.location.model.Location;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -80,12 +79,9 @@ public class EventRepositoryImpl implements EventRepository {
             parameters.addValue("states", criteria.getStates());
         }
 
-        if (criteria.getLocation() != null) {
-            Location location = criteria.getLocation();
-            conditions.add("distance(:lat, :lon, lat, lon) <= :radius");
-            parameters.addValue("lat", location.getLat());
-            parameters.addValue("lon", location.getLon());
-            parameters.addValue("radius", location.getRadius());
+        if (criteria.getLocationIds() != null) {
+            conditions.add("location_id in (:locationIds)");
+            parameters.addValue("locationIds", criteria.getLocationIds());
         }
 
         if (!conditions.isEmpty()) {
