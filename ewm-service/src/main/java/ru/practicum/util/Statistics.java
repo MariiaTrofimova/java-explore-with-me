@@ -8,6 +8,7 @@ import ru.practicum.event.model.Event;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
@@ -43,4 +44,15 @@ public class Statistics {
             throw new StatsRequestException("Ошибка запроса данных статистики");
         }
     }
+
+    public static Map<Long, Integer> makeViewMap(List<ViewStatsDto> viewStatsDtos, List<Event> events) {
+        Map<Long, Integer> viewsByEventId = events.stream()
+                .collect(Collectors.toMap(Event::getId, event -> 0));
+        if (viewStatsDtos.isEmpty()) {
+            return viewsByEventId;
+        }
+        viewStatsDtos.forEach(viewStatsDto -> viewsByEventId.put(Statistics.getEventId(viewStatsDto), (int) viewStatsDto.getHits()));
+        return viewsByEventId;
+    }
+
 }

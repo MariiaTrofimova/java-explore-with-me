@@ -13,7 +13,6 @@ import ru.practicum.location.mapper.LocationMapper;
 import ru.practicum.location.model.Location;
 import ru.practicum.user.User;
 import ru.practicum.user.mapper.UserMapper;
-import ru.practicum.util.Statistics;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +21,7 @@ import java.util.stream.Collectors;
 
 import static ru.practicum.util.DateTime.toInstant;
 import static ru.practicum.util.DateTime.toLocalDateTime;
+import static ru.practicum.util.Statistics.makeViewMap;
 
 @Slf4j
 public class EventMapper {
@@ -77,9 +77,19 @@ public class EventMapper {
                                                         List<Location> locations,
                                                         Map<Long, Integer> confirmedRequestsByEventId,
                                                         List<ViewStatsDto> viewStatsDtos) {
+
+        Map<Long, Integer> viewsByEventId = makeViewMap(viewStatsDtos, events);
+        return toEventFullDtoList(events, categories, users, locations, confirmedRequestsByEventId, viewsByEventId);
+    }
+
+    public static List<EventFullDto> toEventFullDtoList(List<Event> events,
+                                                        List<Category> categories,
+                                                        List<User> users,
+                                                        List<Location> locations,
+                                                        Map<Long, Integer> confirmedRequestsByEventId,
+                                                        Map<Long, Integer> viewsByEventId) {
         Map<Long, Category> categoriesById = makeCategoryMap(categories);
         Map<Long, User> usersById = makeUsersMap(users);
-        Map<Long, Integer> viewsByEventId = makeViewMap(viewStatsDtos, events);
         Map<Long, Location> locationsById = makeLocationsMap(locations);
 
         return events.stream().map(event -> {
@@ -92,6 +102,7 @@ public class EventMapper {
                     viewsByEventId.get(eventId)
             );
         }).collect(Collectors.toList());
+
     }
 
     public static EventShortDto toEventShortDto(Event event,
@@ -132,16 +143,6 @@ public class EventMapper {
         }).collect(Collectors.toList());
     }
 
-    private static Map<Long, Integer> makeViewMap(List<ViewStatsDto> viewStatsDtos, List<Event> events) {
-        Map<Long, Integer> viewsByEventId = events.stream()
-                .collect(Collectors.toMap(Event::getId, event -> 0));
-        if (viewStatsDtos.isEmpty()) {
-            return viewsByEventId;
-        }
-        viewStatsDtos.forEach(viewStatsDto -> viewsByEventId.put(Statistics.getEventId(viewStatsDto), (int) viewStatsDto.getHits()));
-        return viewsByEventId;
-    }
-
     private static Map<Long, User> makeUsersMap(List<User> users) {
         return users.stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
@@ -156,4 +157,6 @@ public class EventMapper {
         return locations.stream()
                 .collect(Collectors.toMap(Location::getId, Function.identity()));
     }
+
+
 }

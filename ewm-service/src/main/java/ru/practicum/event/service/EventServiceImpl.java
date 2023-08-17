@@ -35,13 +35,16 @@ import ru.practicum.util.StatisticRequestService;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ru.practicum.event.enums.EventState.PUBLISHED;
 import static ru.practicum.util.DateTime.toInstant;
 import static ru.practicum.util.Statistics.getEventId;
+import static ru.practicum.util.Statistics.makeViewMap;
 import static ru.practicum.util.Validation.*;
 
 @Service
@@ -66,14 +69,20 @@ public class EventServiceImpl implements EventService {
                                                       List<Long> categoryIds,
                                                       Instant start,
                                                       Instant end,
+                                                      Long locId,
                                                       int from,
                                                       int size) {
+        Location location = null;
+        if (locId != null) {
+            location = locationRepo.findById(locId);
+        }
         Criteria criteria = Criteria.builder()
                 .users(users)
                 .states(states)
                 .categories(categoryIds)
                 .start(start)
                 .end(end)
+                .location(location)
                 .from(from)
                 .size(size)
                 .build();
@@ -133,6 +142,10 @@ public class EventServiceImpl implements EventService {
             events = events.stream()
                     .filter(event -> confirmedRequestsQty.get(event.getId()) < event.getParticipantLimit())
                     .collect(Collectors.toList());
+        }
+        if (sort == EventSort.VIEWS) {
+            return makeSortedByViewsFullResponseDtoList(events, from, size);
+
         }
         events.forEach(event -> addEndHitPoint(URI + "/" + event.getId(), ip));
         return makeFullResponseDtoList(events);
@@ -300,6 +313,35 @@ public class EventServiceImpl implements EventService {
         }
 
         return EventMapper.toEventFullDto(event, category, user, location, confirmedRequests, views);
+    }
+
+    private List<EventFullDto> makeSortedByViewsFullResponseDtoList(List<Event> events, int from, int size) {
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<ViewStatsDto> viewStatsDtos = statsRequestService.makeStatRequest(events);
+        Map<Long, Integer> viewsByEventId = makeViewMap(viewStatsDtos, events);
+        viewsByEventId = viewsByEventId.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .skip(from)
+                .limit(size)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        Map<Long, Event> eventsByIds = events.stream().collect(Collectors.toMap(Event::getId, Function.identity()));
+
+
+        events = viewsByEventId.keySet().stream()
+                .map(eventsByIds::get)
+                .collect(Collectors.toList());
+
+        List<Category> categories = findCategoriesByEvents(events);
+        List<User> users = findUsersByEvents(events);
+        List<Location> locations = findLocationsByEvents(events);
+        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        Map<Long, Integer> confirmedRequestsByEventId = requestRepo.countConfirmedRequestsByEventIds(eventIds);
+
+        return EventMapper.toEventFullDtoList(events, categories, users, locations,
+                confirmedRequestsByEventId, viewsByEventId);
     }
 
     private List<EventFullDto> makeFullResponseDtoList(List<Event> events) {

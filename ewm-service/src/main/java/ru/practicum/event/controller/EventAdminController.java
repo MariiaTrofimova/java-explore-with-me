@@ -39,6 +39,7 @@ public class EventAdminController {
                                      @RequestParam(required = false, name = "rangeEnd")
                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                      LocalDateTime endLocal,
+                                     @RequestParam(required = false) Long locId,
                                      @PositiveOrZero(message = FROM_ERROR_MESSAGE)
                                      @RequestParam(defaultValue = "0") Integer from,
                                      @Positive(message = SIZE_ERROR_MESSAGE)
@@ -53,7 +54,7 @@ public class EventAdminController {
         if (start != null && end != null) {
             validateStartEndDates(start, end);
         }
-        return service.getAllByCriteriaByAdmin(users, states, categories, start, end, from, size);
+        return service.getAllByCriteriaByAdmin(users, states, categories, start, end, locId, from, size);
     }
 
     @PatchMapping("/{eventId}")

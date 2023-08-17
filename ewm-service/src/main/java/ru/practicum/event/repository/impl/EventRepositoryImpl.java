@@ -16,6 +16,7 @@ import ru.practicum.event.enums.EventState;
 import ru.practicum.event.model.Criteria;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.location.model.Location;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -79,6 +80,14 @@ public class EventRepositoryImpl implements EventRepository {
             parameters.addValue("states", criteria.getStates());
         }
 
+        if (criteria.getLocation() != null) {
+            Location location = criteria.getLocation();
+            conditions.add("distance(:lat, :lon, lat, lon) <= :radius");
+            parameters.addValue("lat", location.getLat());
+            parameters.addValue("lon", location.getLon());
+            parameters.addValue("radius", location.getRadius());
+        }
+
         if (!conditions.isEmpty()) {
             String allConditions = conditions.stream()
                     .collect(Collectors.joining(" AND ", "(", ")"));
@@ -88,10 +97,11 @@ public class EventRepositoryImpl implements EventRepository {
         if (criteria.getSort() != null && criteria.getSort() == EventSort.EVENT_DATE) {
             sql.append(" order by event_date");
         }
-
-        sql.append(" limit :size offset :from");
-        parameters.addValue("size", criteria.getSize());
-        parameters.addValue("from", criteria.getFrom());
+        if (criteria.getSort() == null || criteria.getSort() != EventSort.VIEWS) {
+            sql.append(" limit :size offset :from");
+            parameters.addValue("size", criteria.getSize());
+            parameters.addValue("from", criteria.getFrom());
+        }
 
         return namedJdbcTemplate.query(sql.toString(), parameters, (rs, rowNum) -> mapRowToEvent(rs));
     }

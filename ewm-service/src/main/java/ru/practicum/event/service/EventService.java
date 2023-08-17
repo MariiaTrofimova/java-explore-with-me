@@ -14,7 +14,7 @@ public interface EventService {
                                                List<Long> categories,
                                                Instant start,
                                                Instant end,
-                                               int from,
+                                               Long locId, int from,
                                                int size);
 
     EventFullDto patchByAdmin(long eventId, UpdateEventDto updateEventDto);
