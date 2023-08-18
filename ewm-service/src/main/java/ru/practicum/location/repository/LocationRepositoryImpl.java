@@ -51,7 +51,7 @@ public class LocationRepositoryImpl implements LocationRepository {
     @Override
     public List<Location> findNearestByLatAndLon(Location location) {
         String sql = "select * from locations where distance(:lat, :lon, lat, lon) <= radius " +
-                "order by radius limit 1";
+                "order by radius";
         MapSqlParameterSource parameters = new MapSqlParameterSource("lat", location.getLat());
         parameters.addValue("lon", location.getLon());
         return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToLocation(rs));
@@ -62,14 +62,14 @@ public class LocationRepositoryImpl implements LocationRepository {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("locations")
                 .usingGeneratedKeyColumns("id");
-        return simpleJdbcInsert.executeAndReturnKey(location.toMap()).longValue();
+        return simpleJdbcInsert.executeAndReturnKey(location.toFullMap()).longValue();
     }
 
     @Override
     public long addByUser(Location location) {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("locations")
-                .usingGeneratedKeyColumns("id", "type", "name");
+                .usingGeneratedKeyColumns("id", "radius", "type", "name");
         KeyHolder generatedKeys = simpleJdbcInsert.executeAndReturnKeyHolder(location.toMap());
         return (long) Objects.requireNonNull(generatedKeys.getKeys()).get("id");
     }
@@ -109,7 +109,7 @@ public class LocationRepositoryImpl implements LocationRepository {
     @Override
     public void delete(long id) {
         String sql = "delete from locations where id = ?";
-        if (jdbcTemplate.update(sql, id) < 0) {
+        if (jdbcTemplate.update(sql, id) <= 0) {
             log.warn("Локация с id {} не найдена", id);
             throw new NotFoundException(String.format("Локация с id %d не найдена", id));
         }
