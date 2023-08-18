@@ -3,7 +3,6 @@ package ru.practicum.event.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.enums.EventSort;
 import ru.practicum.event.service.EventService;
@@ -47,7 +46,7 @@ public class EventPublicController {
         EventSort sort = null;
         if (sortParam != null) {
             sort = EventSort.from(sortParam)
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + sortParam));
+                    .orElseThrow(() -> new IllegalArgumentException("Unknown sort parameter: " + sortParam));
         }
         Instant start = startLocal == null ? Instant.now() : toInstant(startLocal);
         Instant end = endLocal == null ? null : toInstant(endLocal);

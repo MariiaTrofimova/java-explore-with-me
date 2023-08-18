@@ -1,7 +1,5 @@
 package ru.practicum.location.dto;
 
-import lombok.*;
-
 import javax.validation.constraints.PositiveOrZero;
 
 @Getter

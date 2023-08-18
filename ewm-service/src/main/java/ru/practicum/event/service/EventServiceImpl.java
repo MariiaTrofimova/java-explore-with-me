@@ -188,7 +188,8 @@ public class EventServiceImpl implements EventService {
         if (newEventDto.getRequestModeration() == null) {
             newEventDto.setRequestModeration(true);
         }
-        Location location = LocationMapper.toLocation(newEventDto.getLocation());
+        LocationDto locationDto = newEventDto.getLocation();
+        Location location = LocationMapper.toLocation(locationDto);
         long locationId = setIdToLocation(location);
         Event event = EventMapper.toEvent(newEventDto, locationId, userId);
         event = repository.add(event);

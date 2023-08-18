@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 import ru.practicum.location.dto.LocationFullDto;
 import ru.practicum.location.dto.NewLocationDto;
 import ru.practicum.location.enums.LocationType;
@@ -40,7 +39,7 @@ public class LocationAdminController {
                                         @RequestParam(defaultValue = "10") Integer size) {
         if (type != null) {
             LocationType.from(type).orElseThrow(() ->
-                    new IllegalArgumentException("Unknown state: " + type));
+                    new IllegalArgumentException("Unknown type: " + type));
         }
         return service.getAllByLocationCriteria(lat, lon, radius, type, from, size);
     }

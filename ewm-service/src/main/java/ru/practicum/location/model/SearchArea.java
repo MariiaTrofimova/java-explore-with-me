@@ -1,7 +1,5 @@
 package ru.practicum.location.model;
 
-import lombok.*;
-
 @Getter
 @Setter
 @Builder

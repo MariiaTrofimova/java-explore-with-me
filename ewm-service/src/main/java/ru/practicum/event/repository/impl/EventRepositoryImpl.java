@@ -79,7 +79,7 @@ public class EventRepositoryImpl implements EventRepository {
             parameters.addValue("states", criteria.getStates());
         }
 
-        if (criteria.getLocationIds() != null) {
+        if (criteria.getLocationIds() != null && !criteria.getLocationIds().isEmpty()) {
             conditions.add("location_id in (:locationIds)");
             parameters.addValue("locationIds", criteria.getLocationIds());
         }

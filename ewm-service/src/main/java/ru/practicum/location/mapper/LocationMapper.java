@@ -32,6 +32,7 @@ public class LocationMapper {
                 .lon(location.getLon())
                 .radius(location.getRadius())
                 .name(location.getName())
+                .type(location.getType().toString())
                 .build();
     }
 
