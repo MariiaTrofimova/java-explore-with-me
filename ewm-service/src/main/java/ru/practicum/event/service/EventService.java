@@ -14,6 +14,9 @@ public interface EventService {
                                                List<Long> categories,
                                                Instant start,
                                                Instant end,
+                                               Float lat,
+                                               Float lon,
+                                               Integer radius,
                                                int from,
                                                int size);
 

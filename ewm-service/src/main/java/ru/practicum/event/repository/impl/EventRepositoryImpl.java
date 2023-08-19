@@ -41,7 +41,6 @@ public class EventRepositoryImpl implements EventRepository {
         List<String> conditions = new ArrayList<>();
         MapSqlParameterSource parameters = new MapSqlParameterSource();
 
-
         if (criteria.getPublished() != null) {
             conditions.add("state = 'PUBLISHED'");
         }
@@ -80,6 +79,11 @@ public class EventRepositoryImpl implements EventRepository {
             parameters.addValue("states", criteria.getStates());
         }
 
+        if (criteria.getLocationIds() != null && !criteria.getLocationIds().isEmpty()) {
+            conditions.add("location_id in (:locationIds)");
+            parameters.addValue("locationIds", criteria.getLocationIds());
+        }
+
         if (!conditions.isEmpty()) {
             String allConditions = conditions.stream()
                     .collect(Collectors.joining(" AND ", "(", ")"));
@@ -89,10 +93,11 @@ public class EventRepositoryImpl implements EventRepository {
         if (criteria.getSort() != null && criteria.getSort() == EventSort.EVENT_DATE) {
             sql.append(" order by event_date");
         }
-
-        sql.append(" limit :size offset :from");
-        parameters.addValue("size", criteria.getSize());
-        parameters.addValue("from", criteria.getFrom());
+        if (criteria.getSort() == null || criteria.getSort() != EventSort.VIEWS) {
+            sql.append(" limit :size offset :from");
+            parameters.addValue("size", criteria.getSize());
+            parameters.addValue("from", criteria.getFrom());
+        }
 
         return namedJdbcTemplate.query(sql.toString(), parameters, (rs, rowNum) -> mapRowToEvent(rs));
     }
@@ -173,6 +178,15 @@ public class EventRepositoryImpl implements EventRepository {
         String sql = "select * from events where id in (:ids)";
         MapSqlParameterSource parameters = new MapSqlParameterSource("ids", ids);
         return namedJdbcTemplate.query(sql, parameters, (rs, rowNum) -> mapRowToEvent(rs));
+    }
+
+    @Override
+    public long countEventsByLocationId(long locId) {
+        String sql = "select COUNT(id) as countEventsByLoc " +
+                "from events where location_id = :locId";
+        MapSqlParameterSource parameters = new MapSqlParameterSource("locId", locId);
+        Long countEventsByLocId = namedJdbcTemplate.queryForObject(sql, parameters, Long.class);
+        return countEventsByLocId == null ? 0 : countEventsByLocId;
     }
 
     private MapSqlParameterSource makeParameterMap(Event event) {

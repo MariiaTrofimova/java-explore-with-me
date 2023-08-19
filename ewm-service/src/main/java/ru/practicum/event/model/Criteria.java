@@ -19,6 +19,7 @@ public class Criteria {
     private Instant start;
     private Instant end;
     private EventSort sort;
+    private List<Long> locationIds;
     private int from;
     private int size;
 

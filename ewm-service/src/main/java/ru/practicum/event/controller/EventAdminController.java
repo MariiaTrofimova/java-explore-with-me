@@ -10,6 +10,8 @@ import ru.practicum.event.dto.UpdateEventDto;
 import ru.practicum.event.enums.EventState;
 import ru.practicum.event.service.EventService;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.Instant;
@@ -39,6 +41,14 @@ public class EventAdminController {
                                      @RequestParam(required = false, name = "rangeEnd")
                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                      LocalDateTime endLocal,
+                                     @Min(value = -90, message = "Широта не может быть меньше -90")
+                                     @Max(value = 90, message = "Широта не может быть больше 90")
+                                     @RequestParam(required = false) Float lat,
+                                     @Min(value = -180, message = "Долгота не может быть меньше -180")
+                                     @Max(value = 180, message = "Долгота не может быть больше 180")
+                                     @RequestParam(required = false) Float lon,
+                                     @PositiveOrZero(message = "Радиус поиска должен быть положительным")
+                                     @RequestParam(required = false) Integer radius,
                                      @PositiveOrZero(message = FROM_ERROR_MESSAGE)
                                      @RequestParam(defaultValue = "0") Integer from,
                                      @Positive(message = SIZE_ERROR_MESSAGE)
@@ -53,7 +63,7 @@ public class EventAdminController {
         if (start != null && end != null) {
             validateStartEndDates(start, end);
         }
-        return service.getAllByCriteriaByAdmin(users, states, categories, start, end, from, size);
+        return service.getAllByCriteriaByAdmin(users, states, categories, start, end, lat, lon, radius, from, size);
     }
 
     @PatchMapping("/{eventId}")

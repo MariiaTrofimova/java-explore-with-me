@@ -1,0 +1,2036 @@
+{
+	"info": {
+		"_postman_id": "9f55cd6e-3285-490c-9ce2-d73917236022",
+		"name": "Test feature: Location Processing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29102934",
+		"_collection_link": "https://warped-moon-790013.postman.co/workspace/Team-Workspace~c024e03c-62e6-43d8-817a-66e4611229e5/collection/29102934-9f55cd6e-3285-490c-9ce2-d73917236022?action=share&source=collection_link&creator=29102934"
+	},
+	"item": [
+		{
+			"name": "AddLocations",
+			"item": [
+				{
+					"name": "Validation",
+					"item": [
+						{
+							"name": "Fail by lat < -90",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": -91, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by lat > 90",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 91, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by lon < -180",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": -181,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by lon > 180",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 181,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by radius",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": -1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by name > 50",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"park1234567899012345678990123456789901234567899012345678990\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by Empty name",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by name with only spaces",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"     \",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by unknown type",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"unknown\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Добавление локации",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 201\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+									"});",
+									"pm.test(\"Has response\", function () {",
+									"    pm.response.to.be.withBody;",
+									"    pm.response.to.be.json;",
+									"});",
+									"pm.test(\"Test location fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('lat');",
+									"    pm.expect(jsonData).to.have.property('lon');",
+									"    pm.expect(jsonData).to.have.property('radius');",
+									"    pm.expect(jsonData).to.have.property('name');",
+									"    pm.expect(jsonData).to.have.property('type');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 100,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/locations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"locations"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Get Locations",
+			"item": [
+				{
+					"name": "Validation",
+					"item": [
+						{
+							"name": "Запрос  списка локаций с неполной областью поиска",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations?lat=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									],
+									"query": [
+										{
+											"key": "lat",
+											"value": "0"
+										},
+										{
+											"key": "lon",
+											"value": "0",
+											"disabled": true
+										},
+										{
+											"key": "radius",
+											"value": "200",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Запрос  списка локаций с неверным типом",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations?type=unknown",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "unknown"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Запрос списка локаций без параметров",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.be.ok;",
+									"});",
+									"",
+									"pm.test(\"Test list locations response\", function () {",
+									"    pm.response.to.be.withBody;",
+									"    pm.response.to.be.json;",
+									"    var jsonData = pm.response.json()",
+									"    pm.expect(jsonData).is.an('array'); ",
+									"    pm.expect(jsonData.length, 'List length must be not 0').to.be.gte(0);",
+									"});",
+									"",
+									"pm.test(\"Test location[0] fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData[0]).to.have.property('id');",
+									"    pm.expect(jsonData[0]).to.have.property('lat');",
+									"    pm.expect(jsonData[0]).to.have.property('lon');",
+									"    pm.expect(jsonData[0]).to.have.property('radius');",
+									"    pm.expect(jsonData[0]).to.have.property('name');",
+									"    pm.expect(jsonData[0]).to.have.property('type');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/locations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"locations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Запрос пустого списка локаций с областью поиска",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.be.ok;",
+									"});",
+									"",
+									"pm.test(\"Test list locations response\", function () {",
+									"    pm.response.to.be.withBody;",
+									"    pm.response.to.be.json;",
+									"    var jsonData = pm.response.json()",
+									"    pm.expect(jsonData).is.an('array'); ",
+									"    pm.expect(jsonData.length, 'List length must be 0').to.be.equal(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/locations?lat=55&lon=55&radius=1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"locations"
+							],
+							"query": [
+								{
+									"key": "lat",
+									"value": "55"
+								},
+								{
+									"key": "lon",
+									"value": "55"
+								},
+								{
+									"key": "radius",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Запрос  списка локаций с областью поиска",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.be.ok;",
+									"});",
+									"",
+									"pm.test(\"Test list locations response\", function () {",
+									"    pm.response.to.be.withBody;",
+									"    pm.response.to.be.json;",
+									"    var jsonData = pm.response.json()",
+									"    pm.expect(jsonData).is.an('array'); ",
+									"    pm.expect(jsonData.length, 'List length must be 0').to.be.gte(0);",
+									"});",
+									"",
+									"pm.test(\"Test location[0] fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData[0]).to.have.property('id');",
+									"    pm.expect(jsonData[0]).to.have.property('lat');",
+									"    pm.expect(jsonData[0]).to.have.property('lon');",
+									"    pm.expect(jsonData[0]).to.have.property('radius');",
+									"    pm.expect(jsonData[0]).to.have.property('name');",
+									"    pm.expect(jsonData[0]).to.have.property('type');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/locations?lat=0&lon=0&radius=200",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"locations"
+							],
+							"query": [
+								{
+									"key": "lat",
+									"value": "0"
+								},
+								{
+									"key": "lon",
+									"value": "0"
+								},
+								{
+									"key": "radius",
+									"value": "200"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Patch Locations",
+			"item": [
+				{
+					"name": "Validation",
+					"item": [
+						{
+							"name": "Fail by lat < -90",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": -91, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by lat > 90",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 91, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by lon < -180",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": -181,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by lon > 180",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 181,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by radius",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": -1,\n    \"name\": \"park\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by name > 50",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"park1234567899012345678990123456789901234567899012345678990\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by Empty name",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by name with only spaces",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"     \",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by unknown type",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"park\",\n    \"type\": \"unknown\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail by Not Found Id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 404\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([404]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lat\": 0, \n    \"lon\": 0,\n    \"radius\": 1,\n    \"name\": \"name\",\n    \"type\": \"OUTDOOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{notFoundId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{notFoundId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Обновление локации со всеми параметрами",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.expect(pm.response.code).to.be.ok;",
+									"});",
+									"pm.test(\"Has response\", function () {",
+									"    pm.response.to.be.withBody;",
+									"    pm.response.to.be.json;",
+									"});",
+									"pm.test(\"Test location fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('lat');",
+									"    pm.expect(jsonData).to.have.property('lon');",
+									"    pm.expect(jsonData).to.have.property('radius');",
+									"    pm.expect(jsonData).to.have.property('name');",
+									"    pm.expect(jsonData).to.have.property('type');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"lat\": 1,\n    \"lon\": 1,\n    \"radius\": 200,\n    \"name\": \"museum\",\n    \"type\": \"INDOOR\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/locations/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"locations",
+								"{{id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Get Events By Location",
+			"item": [
+				{
+					"name": "create event to find",
+					"item": [
+						{
+							"name": "Добавление новой категории",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
+											"    pm.response.to.have.status(201);\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											"\r",
+											"const source = JSON.parse(pm.request.body.raw);\r",
+											"const target = pm.response.json();\r",
+											"\r",
+											"pm.test(\"Категория должна содержать поля: id, name\", function () {\r",
+											"pm.expect(target).to.have.property('id');\r",
+											"pm.expect(target).to.have.property('name');\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"test name\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/categories",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"categories"
+									]
+								},
+								"description": "Обратите внимание: имя категории должно быть уникальным"
+							},
+							"response": []
+						},
+						{
+							"name": "Добавление нового пользователя",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
+											"    pm.response.to.have.status(201);\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											"\r",
+											"const source = JSON.parse(pm.request.body.raw);\r",
+											"const target = pm.response.json();\r",
+											"\r",
+											"pm.test(\"Пользователь должен содержать поля: id, name, email\", function () {\r",
+											"pm.expect(target).to.have.property('id');\r",
+											"pm.expect(target).to.have.property('name');\r",
+											"pm.expect(target).to.have.property('email');\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"users name\",\n    \"email\": \"test@mail.ru\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/users",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Добавление нового события",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
+											"    pm.response.to.have.status(201);  \r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											"\r",
+											"const source = JSON.parse(pm.request.body.raw);\r",
+											"const target = pm.response.json();\r",
+											"\r",
+											"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, description, participantLimit, state, createdOn, location, requestModeration\", function () {\r",
+											"pm.expect(target).to.have.property('id');\r",
+											"pm.expect(target).to.have.property('title');\r",
+											"pm.expect(target).to.have.property('annotation');\r",
+											"pm.expect(target).to.have.property('category');\r",
+											"pm.expect(target).to.have.property('paid');\r",
+											"pm.expect(target).to.have.property('eventDate');\r",
+											"pm.expect(target).to.have.property('initiator');\r",
+											"pm.expect(target).to.have.property('description');\r",
+											"pm.expect(target).to.have.property('participantLimit');\r",
+											"pm.expect(target).to.have.property('state');\r",
+											"pm.expect(target).to.have.property('createdOn');\r",
+											"pm.expect(target).to.have.property('location');\r",
+											"pm.expect(target).to.have.property('requestModeration');\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"annotation\": \"annotation annotation annotation\",\n    \"category\" : 1,\n    \"description\": \"description description description\",\n    \"eventDate\": \"2025-01-01 00:00:00\",\n    \"title\": \"title\", \n    \"location\": {\n        \"lat\": 0,\n        \"lon\": 0\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/users/{{id}}/events",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users",
+										"{{id}}",
+										"events"
+									]
+								},
+								"description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Validation",
+					"item": [
+						{
+							"name": "Получение списка событий с широтой < -90",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/admin/events?lat=-91&lon=0&radius=200",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"events"
+									],
+									"query": [
+										{
+											"key": "lat",
+											"value": "-91"
+										},
+										{
+											"key": "lon",
+											"value": "0"
+										},
+										{
+											"key": "radius",
+											"value": "200"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение списка событий с широтой > 90",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/admin/events?lat=91&lon=0&radius=200",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"events"
+									],
+									"query": [
+										{
+											"key": "lat",
+											"value": "91"
+										},
+										{
+											"key": "lon",
+											"value": "0"
+										},
+										{
+											"key": "radius",
+											"value": "200"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение списка событий с долготой < -180",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/admin/events?lat=0&lon=-181&radius=200",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"events"
+									],
+									"query": [
+										{
+											"key": "lat",
+											"value": "0"
+										},
+										{
+											"key": "lon",
+											"value": "-181"
+										},
+										{
+											"key": "radius",
+											"value": "200"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Получение списка событий с долготой > 180",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400 or 409\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,409]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/admin/events?lat=0&lon=181&radius=200",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"events"
+									],
+									"query": [
+										{
+											"key": "lat",
+											"value": "0"
+										},
+										{
+											"key": "lon",
+											"value": "181"
+										},
+										{
+											"key": "radius",
+											"value": "200"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Получение списка событий по локации",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.be.ok;",
+									"});",
+									"",
+									"pm.test(\"Test list events response\", function () {",
+									"    pm.response.to.be.withBody;",
+									"    pm.response.to.be.json;",
+									"    var jsonData = pm.response.json()",
+									"    pm.expect(jsonData).is.an('array'); ",
+									"    pm.expect(jsonData.length, 'List length must be not 0').to.be.greaterThan(0);",
+									"});",
+									"",
+									"const target = pm.response.json()[0];",
+									"",
+									"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, views, confirmedRequests, description, participantLimit, state, createdOn, publishedOn, location, requestModeration\", function () {",
+									"pm.expect(target).to.have.property('id');",
+									"pm.expect(target).to.have.property('title');",
+									"pm.expect(target).to.have.property('annotation');",
+									"pm.expect(target).to.have.property('category');",
+									"pm.expect(target).to.have.property('paid');",
+									"pm.expect(target).to.have.property('eventDate');",
+									"pm.expect(target).to.have.property('initiator');",
+									"pm.expect(target).to.have.property('views');",
+									"pm.expect(target).to.have.property('confirmedRequests');",
+									"pm.expect(target).to.have.property('description');",
+									"pm.expect(target).to.have.property('participantLimit');",
+									"pm.expect(target).to.have.property('state');",
+									"pm.expect(target).to.have.property('createdOn');",
+									"pm.expect(target).to.have.property('publishedOn');",
+									"pm.expect(target).to.have.property('location');",
+									"pm.expect(target).to.have.property('requestModeration');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/events?lat=0&lon=0&radius=200",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"events"
+							],
+							"query": [
+								{
+									"key": "lat",
+									"value": "0"
+								},
+								{
+									"key": "lon",
+									"value": "0"
+								},
+								{
+									"key": "radius",
+									"value": "200"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Delete Locations",
+			"item": [
+				{
+					"name": "Validation",
+					"item": [
+						{
+							"name": "Fail by Not Found Id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 404\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([404]);",
+											"});",
+											"pm.test(\"Has response\", function () {",
+											"    pm.response.to.be.withBody;",
+											"    pm.response.to.be.json;",
+											"});",
+											"pm.test(\"Test error fields\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property('status');",
+											"    pm.expect(jsonData).to.have.property('reason');",
+											"    pm.expect(jsonData).to.have.property('message');",
+											"    pm.expect(jsonData).to.have.property('timestamp');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{notFoundId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{notFoundId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Удаление локации с событиями",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is Conflict\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([400,403,409]);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/admin/locations/{{id}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"locations",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "id",
+			"value": "1"
+		},
+		{
+			"key": "notFoundId",
+			"value": "9999"
+		}
+	]
+}

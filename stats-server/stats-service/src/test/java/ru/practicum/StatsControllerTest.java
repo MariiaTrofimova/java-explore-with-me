@@ -44,7 +44,6 @@ class StatsControllerTest {
     private String start;
     private String end;
 
-
     @Autowired
     ObjectMapper mapper;
 

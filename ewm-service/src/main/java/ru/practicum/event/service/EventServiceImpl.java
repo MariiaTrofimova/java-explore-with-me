@@ -13,7 +13,6 @@ import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.error.exceptions.ConflictException;
 import ru.practicum.error.exceptions.NotFoundException;
 import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.LocationDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventDto;
 import ru.practicum.event.enums.EventSort;
@@ -21,12 +20,15 @@ import ru.practicum.event.enums.EventState;
 import ru.practicum.event.enums.StateActionAdmin;
 import ru.practicum.event.enums.StateActionPrivate;
 import ru.practicum.event.mapper.EventMapper;
-import ru.practicum.event.mapper.LocationMapper;
 import ru.practicum.event.model.Criteria;
 import ru.practicum.event.model.Event;
-import ru.practicum.event.model.Location;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.event.repository.LocationRepository;
+import ru.practicum.location.dto.LocationDto;
+import ru.practicum.location.mapper.LocationMapper;
+import ru.practicum.location.model.Location;
+import ru.practicum.location.model.LocationCriteria;
+import ru.practicum.location.model.SearchArea;
+import ru.practicum.location.repository.LocationRepository;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.User;
 import ru.practicum.user.repository.UserRepository;
@@ -35,13 +37,17 @@ import ru.practicum.util.StatisticRequestService;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ru.practicum.event.enums.EventState.PUBLISHED;
 import static ru.practicum.util.DateTime.toInstant;
+import static ru.practicum.util.LocationSearch.makeSearchArea;
 import static ru.practicum.util.Statistics.getEventId;
+import static ru.practicum.util.Statistics.makeViewMap;
 import static ru.practicum.util.Validation.*;
 
 @Service
@@ -66,14 +72,22 @@ public class EventServiceImpl implements EventService {
                                                       List<Long> categoryIds,
                                                       Instant start,
                                                       Instant end,
+                                                      Float lat,
+                                                      Float lon,
+                                                      Integer radius,
                                                       int from,
                                                       int size) {
+        List<Long> locationIds = null;
+        if (lat != null || lon != null || radius != null) {
+            locationIds = getLocationIdsInArea(lat, lon, radius);
+        }
         Criteria criteria = Criteria.builder()
                 .users(users)
                 .states(states)
                 .categories(categoryIds)
                 .start(start)
                 .end(end)
+                .locationIds(locationIds)
                 .from(from)
                 .size(size)
                 .build();
@@ -134,6 +148,10 @@ public class EventServiceImpl implements EventService {
                     .filter(event -> confirmedRequestsQty.get(event.getId()) < event.getParticipantLimit())
                     .collect(Collectors.toList());
         }
+        if (sort == EventSort.VIEWS) {
+            return makeSortedByViewsFullResponseDtoList(events, from, size);
+
+        }
         events.forEach(event -> addEndHitPoint(URI + "/" + event.getId(), ip));
         return makeFullResponseDtoList(events);
     }
@@ -178,10 +196,10 @@ public class EventServiceImpl implements EventService {
     }
 
     private long setIdToLocation(Location location) {
-        List<Location> locations = locationRepo.findByLatAndLon(location);
+        List<Location> locations = locationRepo.findNearestByLatAndLon(location);
         long locationId;
         if (locations.isEmpty()) {
-            locationId = locationRepo.add(location);
+            locationId = locationRepo.addByUser(location);
         } else {
             locationId = locations.get(0).getId();
         }
@@ -204,6 +222,16 @@ public class EventServiceImpl implements EventService {
         }
         event = repository.update(event);
         return makeFullResponseDto(event);
+    }
+
+    private List<Long> getLocationIdsInArea(Float lat, Float lon, Integer radius) {
+        SearchArea searchArea = makeSearchArea(lat, lon, radius);
+        LocationCriteria locationCriteria = LocationCriteria.builder()
+                .searchArea(searchArea)
+                .build();
+        return locationRepo.getByCriteria(locationCriteria).stream()
+                .map(Location::getId)
+                .collect(Collectors.toList());
     }
 
     private void setEventStateByPrivateAction(Event event, String stateAction) {
@@ -300,6 +328,35 @@ public class EventServiceImpl implements EventService {
         }
 
         return EventMapper.toEventFullDto(event, category, user, location, confirmedRequests, views);
+    }
+
+    private List<EventFullDto> makeSortedByViewsFullResponseDtoList(List<Event> events, int from, int size) {
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<ViewStatsDto> viewStatsDtos = statsRequestService.makeStatRequest(events);
+        Map<Long, Integer> viewsByEventId = makeViewMap(viewStatsDtos, events);
+        viewsByEventId = viewsByEventId.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .skip(from)
+                .limit(size)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        Map<Long, Event> eventsByIds = events.stream().collect(Collectors.toMap(Event::getId, Function.identity()));
+
+
+        events = viewsByEventId.keySet().stream()
+                .map(eventsByIds::get)
+                .collect(Collectors.toList());
+
+        List<Category> categories = findCategoriesByEvents(events);
+        List<User> users = findUsersByEvents(events);
+        List<Location> locations = findLocationsByEvents(events);
+        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        Map<Long, Integer> confirmedRequestsByEventId = requestRepo.countConfirmedRequestsByEventIds(eventIds);
+
+        return EventMapper.toEventFullDtoList(events, categories, users, locations,
+                confirmedRequestsByEventId, viewsByEventId);
     }
 
     private List<EventFullDto> makeFullResponseDtoList(List<Event> events) {
