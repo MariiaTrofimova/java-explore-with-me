@@ -3,6 +3,7 @@ package ru.practicum.location.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.error.exceptions.ConflictException;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.location.dto.LocationFullDto;
@@ -23,6 +24,7 @@ import static ru.practicum.util.Validation.validateStringField;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class LocationServiceImpl implements LocationService {
     private final LocationRepository repository;
     private final EventRepository eventRepo;
@@ -61,6 +63,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<LocationFullDto> getAllByLocationCriteria(Float lat, Float lon, Integer radius, String type,
                                                           int from, int size) {
         SearchArea searchArea = makeSearchArea(lat, lon, radius);

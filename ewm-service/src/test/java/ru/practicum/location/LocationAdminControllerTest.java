@@ -73,12 +73,22 @@ class LocationAdminControllerTest {
     @Test
     void shouldFailGetAll() throws Exception {
         mvc.perform(get(PATH)
-                        .param("lat", "-1"))
+                        .param("lat", "-91"))
                 .andDo(print())
                 .andExpect(status().isConflict());
 
         mvc.perform(get(PATH)
-                        .param("lon", "-1"))
+                        .param("lat", "91"))
+                .andDo(print())
+                .andExpect(status().isConflict());
+
+        mvc.perform(get(PATH)
+                        .param("lon", "-181"))
+                .andDo(print())
+                .andExpect(status().isConflict());
+
+        mvc.perform(get(PATH)
+                        .param("lon", "181"))
                 .andDo(print())
                 .andExpect(status().isConflict());
 
@@ -144,7 +154,7 @@ class LocationAdminControllerTest {
     void shouldFailAdd() throws Exception {
         //Fail validation lat
         newLocationDto = newBuilder
-                .lat(-1f)
+                .lat(-91f)
                 .build();
         String json = mapper.writeValueAsString(newLocationDto);
         mvc.perform(post(PATH)
@@ -156,7 +166,7 @@ class LocationAdminControllerTest {
         //Fail validation lon
         newLocationDto = newBuilder
                 .lat(0f)
-                .lon(-1f)
+                .lon(-181f)
                 .build();
         json = mapper.writeValueAsString(newLocationDto);
         mvc.perform(post(PATH)
@@ -211,7 +221,7 @@ class LocationAdminControllerTest {
         //Fail Negative
         long id = 1L;
         locationFullDto = builder
-                .lat(-1f)
+                .lat(-91f)
                 .build();
         String json = mapper.writeValueAsString(locationFullDto);
         mvc.perform(patch(PATH + "/" + id)

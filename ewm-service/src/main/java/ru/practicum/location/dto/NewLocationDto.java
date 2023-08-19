@@ -2,10 +2,7 @@ package ru.practicum.location.dto;
 
 import lombok.*;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PositiveOrZero;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 
 @Getter
 @Setter
@@ -14,10 +11,12 @@ import javax.validation.constraints.Size;
 @RequiredArgsConstructor
 public class NewLocationDto {
     @NotNull(message = "Локация должна содержать данные о широте")
-    @PositiveOrZero(message = "Широта не может быть отрицательной")
+    @Min(value = -90, message = "Широта не может быть меньше -90")
+    @Max(value = 90, message = "Широта не может быть больше 90")
     private Float lat;
     @NotNull(message = "Локация должна содержать данные о широте")
-    @PositiveOrZero(message = "Долгота не может быть отрицательной")
+    @Min(value = -180, message = "Долгота не может быть меньше -180")
+    @Max(value = 180, message = "Долгота не может быть больше 180")
     private Float lon;
     @NotNull(message = "Локация должна содержать данные о радиусе")
     @PositiveOrZero(message = "Радиус локации не может быть отрицательным")

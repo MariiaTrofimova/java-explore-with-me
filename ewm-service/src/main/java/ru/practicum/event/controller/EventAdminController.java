@@ -10,6 +10,8 @@ import ru.practicum.event.dto.UpdateEventDto;
 import ru.practicum.event.enums.EventState;
 import ru.practicum.event.service.EventService;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.Instant;
@@ -39,9 +41,11 @@ public class EventAdminController {
                                      @RequestParam(required = false, name = "rangeEnd")
                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                      LocalDateTime endLocal,
-                                     @PositiveOrZero(message = "Широта не может быть отрицательной")
+                                     @Min(value = -90, message = "Широта не может быть меньше -90")
+                                     @Max(value = 90, message = "Широта не может быть больше 90")
                                      @RequestParam(required = false) Float lat,
-                                     @PositiveOrZero(message = "Долгота не может быть отрицательной")
+                                     @Min(value = -180, message = "Долгота не может быть меньше -180")
+                                     @Max(value = 180, message = "Долгота не может быть больше 180")
                                      @RequestParam(required = false) Float lon,
                                      @PositiveOrZero(message = "Радиус поиска должен быть положительным")
                                      @RequestParam(required = false) Integer radius,

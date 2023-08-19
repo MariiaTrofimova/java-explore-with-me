@@ -74,12 +74,22 @@ class EventAdminControllerTest {
     @Test
     void shouldFailGetAll() throws Exception {
         mvc.perform(get(PATH)
-                        .param("lat", "-1"))
+                        .param("lat", "-91"))
                 .andDo(print())
                 .andExpect(status().isConflict());
 
         mvc.perform(get(PATH)
-                        .param("lon", "-1"))
+                        .param("lat", "91"))
+                .andDo(print())
+                .andExpect(status().isConflict());
+
+        mvc.perform(get(PATH)
+                        .param("lon", "-181"))
+                .andDo(print())
+                .andExpect(status().isConflict());
+
+        mvc.perform(get(PATH)
+                        .param("lon", "181"))
                 .andDo(print())
                 .andExpect(status().isConflict());
 
